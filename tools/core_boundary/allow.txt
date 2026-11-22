@@ -1,0 +1,27 @@
+# What Core 0 and Core 2 may use of the game besides the game frame (include/platform/game_frame.h).
+# Read by tools/core_boundary/check_core_boundary.py; the rule syntax is in its Allow class.
+# Every rule says why it is safe. Anything not listed here is a violation of docs/reference/THREADS.md.
+# (Active build gate starting in Phase F3 once MainThread_Boot / MainThread_Run & GameFrame land.)
+
+# ── Pure game functions: they read constant tables only ──────────────────────────────────────
+call LZDecompressWram              # decompresses its argument into the caller's buffer
+call MetatileBehavior_*            # constant sTileBitAttributes table lookups & behavior checks
+call GetMapHeaderFromConnection    # gMapGroups constant map headers
+
+# ── Channel 1: the emulated GBA display (read only, tears for a frame at worst) ──────────────
+# Core 1 writes it; Core 2 DrawWorkerMain and Core 0 Widescreen_PrepareDraw read it.
+data REG_BASE
+data VRAM_
+data OAM
+data PLTT
+data gPlttExt
+data gOamExt
+data gPlttExtInUse
+data DrawFrame:gScreenOam
+data Widescreen_PrepareDraw:gScanlineEffect
+
+# ── Channel 2: the active map layout, guarded by GameFrame_MapSettled / sMapMutationLock ────
+# Core 1 calls GameFrame_BeginMapMutation before changing map/VMap and clears the lock only after
+# publishing a matching GameFrame; Core 0 and Core 2 read only while GameFrame_MapSettled().
+data gMapHeader
+data VMap

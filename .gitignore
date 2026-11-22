@@ -1,0 +1,97 @@
+*.exe
+*.dll
+*.o
+*.i
+*.elf
+*.gba
+*.sgm
+*.sa1
+*.ss[0-9]
+*.sg1
+*.1bpp
+*.4bpp
+*.8bpp
+*.gbapal
+*.lz
+*.rl
+*.latfont
+*.hwlatfont
+*.fwlatfont
+*.hwjpnfont
+*.fwjpnfont
+sound/**/*.bin
+sound/songs/midi/*.s
+tools/agbcc
+*.map
+*.bat
+!/build_all.bat
+*.dump
+*.sa*
+Thumbs.db
+build/
+.cxx/
+/pokefirered
+/pokefirered.sav
+.DS_Store
+*.ddump
+.idea/
+porymap.*.cfg
+prefabs.json
+.vscode/
+*.a
+.fuse_hidden*
+*.sna
+*.diff
+*.sym
+/pokefirered.cfg
+
+# PS Vita build output
+cmake-build-*/
+build-vita/
+build-vita-*/
+*.vpk
+*.velf
+*.self
+eboot.bin
+param.sfo
+*.sav
+
+# Local context graph caches — regenerable, not committed (run `trail build`).
+.trail/
+/graft/
+
+# Telemetry logs and coredumps
+logs/
+*.psp2dmp
+
+# Python bytecode caches
+__pycache__/
+*.pyc
+
+# Local AI session files and custom reference art
+/.trail/
+/.claude/
+/handoff.yaml
+/memory.yaml
+/Live Area Images/
+/imagenes para live area de referencia/
+
+# Game files: not in this repository. fetch_assets.sh downloads them (tools/assets/manifest.txt)
+# after checking the user's Pokémon FireRed dump, and build_all.sh / build_vita.sh builds the UI atlas.
+/graphics/**/*.png
+/graphics/**/*.pal
+/graphics/**/*.bin
+/graphics/**/*.fwlatfont
+/graphics/**/*.hwlatfont
+/sound/**/*.wav
+/sound/**/*.pcm
+/sound/songs/midi/*.mid
+/data/**/*.pal
+/data/**/*.bin
+/data/**/*.png
+/assets/ui2/ui_atlas.bin
+/.assets_src/
+/.assets_ok
+/.assets_rom
+/.assets_manifest
+/vita/sce_sys_custom/
