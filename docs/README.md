@@ -13,6 +13,7 @@ reference document for the subsystem you are changing. Contribution rules live i
 | Document | Audience | Covers |
 |---|---|---|
 | [guides/BUILD_YOUR_OWN.md](guides/BUILD_YOUR_OWN.md) ([español](guides/BUILD_YOUR_OWN.es.md)) | Players | One-step build from your Pokémon FireRed cartridge (`build_all.bat`), installing, reporting bugs |
+| [guides/ADDING_A_LANGUAGE.md](guides/ADDING_A_LANGUAGE.md) | Developers, translators | One build = one language: registry, UI catalog, BPRS text manifest (`gen_manifest.py`), staging (`localize.py`), layout patches |
 | [guides/BUILD.md](guides/BUILD.md) | Developers | MSYS2/VitaSDK toolchain, host tools, game assets, CMake options, `core_boundary` and `doc_check` gates |
 | [guides/DEBUGGING.md](guides/DEBUGGING.md) | Developers | Buffered logging (`VITA_LOG`), telemetry (`VitaPerf`), GPU probes (`VitaPerf_GpuScene`), SD card stall avoidance, boundary checks, crash dumps (`vita-parse-core`) |
 

@@ -48,6 +48,11 @@ the game's graphics, sounds, or binary data, nor any ROM; built VPKs contain com
 
 ## Original PS Vita code
 
+The localization tools `tools/locales/match_rom.py`, `tools/locales/gen_manifest.py`
+(method) and `tools/locales/localize.py` are adapted from Emerald 3DS's locale tools and carry
+**CC BY-NC-SA 4.0**. The Spanish manifest `tools/locales/es/manifest.json.gz` holds source
+positions and ROM offsets only; no ROM text or graphics are distributed.
+
 Original PS Vita port code written for this project and `pokeemerald-vita-3ds` that is not derived
 from `emerald-3ds` v0.5.0+ (the VitaSDK/vitaGL backend, build/asset scripts, telemetry, multicore
 `GameFrame` pipeline, HD-2D shaders, and Native 960×544 16:9 UI) is offered under the MIT licence

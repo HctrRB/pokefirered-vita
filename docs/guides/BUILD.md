@@ -1,7 +1,7 @@
 # Building
 
-Type: guide · Audience: developers · Status: Phase F6 built (default & `-Probe`, pending real PS Vita hardware smoke test)
-Verified against: Phase F6 default & `-Probe` builds, ELF verification, `core_boundary` & `doc_check` (2026-11-22)
+Type: guide · Audience: developers · Status: current (default, `-Probe` and `-Locale es` builds)
+Verified against: default, `-Probe` and `-Locale es -Rom` builds, `core_boundary` & `doc_check` (2026-11-23)
 
 > **Phase F6 build status:** Root `CMakeLists.txt` drives Modern target-based Vita builds with
 > `VITA_CORE_BOUNDARY=ON`, `VITA_PARALLEL_DRAW=ON` (Core 2 `DrawWorkerMain` + NEON, prioritized
@@ -70,6 +70,28 @@ With `charmap.txt`, the 6 `*_rules.mk` files, the restored `asm/` macro includes
    crash decoding, and planned `build-vita-probe/pokefirered.vpk` for Phase F6 GPU benchmark
    sessions).
 
+### Languages (`-Locale`, [ADDING_A_LANGUAGE.md](ADDING_A_LANGUAGE.md))
+
+One build = one language. `tools/locales/languages.json` is the only list of languages; the
+repository sources always stay English, and each language builds in its own `build-vita-<code>/`.
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\build_vita.ps1 -Locale es -UiOnly   # Spanish native UI over English game text (dev)
+powershell.exe -ExecutionPolicy Bypass -File .\build_vita.ps1 -Locale es -Rom <your BPRS .gba>   # full Spanish build (game text from your ROM)
+```
+
+A non-English build writes its atlas with `tools/ui2/build_atlas.py --locale <code> --out
+build-vita-<code>/ui2/ui_atlas.bin` (needs Pillow), compiles `tools/locales/<code>/ui.json` into
+`ui2/locale.bin` with `tools/locales/compile_ui.py` (stops on printf-conversion mismatches, letters
+missing from `languages.json`, or hash collisions; writes `locale.bin.txt` with missing and
+much-wider strings), and passes `-DGAME_LANGUAGE`, `-DUI_LOCALE_CATALOG` and, for metric
+languages, `-DUI_METRIC_UNITS`. After changing any `UI_TR` / `UI_N` string, run
+`python tools/locales/extract_ui.py` to refresh `tools/locales/en/ui.json`. With `-Rom`,
+`build_vita.sh` first stages the sources into `build-vita-<code>/stage/` with
+`tools/locales/localize.py` (ROM SHA-1 checked, manifest spans and graphics replaced, patches
+applied) and configures CMake there with `-DVITA_DOC_CHECK=OFF`. See
+[ADDING_A_LANGUAGE.md](ADDING_A_LANGUAGE.md).
+
 ### CMake options & build-time gates (F1 active + F3–F7 targets)
 
 | Option / Gate | Purpose | Default / Status |
@@ -81,6 +103,8 @@ With `charmap.txt`, the 6 `*_rules.mk` files, the restored `asm/` macro includes
 | `-DVITA_VOXEL_3D=ON/OFF` | Enable 3D Voxel overworld renderer, `app0:voxel/` packaging & Core 2 voxel workers (`VOXEL_SUPPORTED`, `CTR_VOXEL_ENABLED=1`) | `ON` (active from Phase F5a–F5b) |
 | `tools/core_boundary/check_core_boundary.py --strict` | Phase-aware check proving Core 0 / Core 2 never call `game_combined.o` or access `gamedata`/`gamebss` | Mandatory on build (`VITA_CORE_BOUNDARY=ON`, `--require-draw-workers` F4+, `--require-voxel-workers` F5a+) |
 | `tools/doc_check/check_docs.py --strict` | Verify doc links, cited files/symbols, headers, zero `file:line` in reference/guides | Mandatory on build (`VITA_DOC_CHECK=ON`) |
+| `-DVITA_LOCALE=<code>` | Build language from `tools/locales/languages.json` (`GAME_LANGUAGE`, UI catalog, locale atlas, units); set by `build_vita.ps1 -Locale` | `en` |
+| `tools/locales/extract_ui.py --check` | `tools/locales/en/ui.json` matches every `UI_TR` / `UI_N` literal in `src/platform/` | Mandatory on build (`ui_strings` target) |
 
 CMake discipline (enforced from Phase F1):
 - `CMAKE_TOOLCHAIN_FILE` set **before** `project()`.

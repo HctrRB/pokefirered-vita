@@ -76,6 +76,22 @@ skipped, so you can run the script again after a failure.
 again. The ROM is only asked for the first time: when a new version needs other game files, the
 script downloads them by itself.
 
+## Spanish version
+
+To play in Spanish you need a dump of **your Pokémon Edición Rojo Fuego cartridge** (`BPRS`). It
+also works as the base dump of step 2, so a Spanish cartridge is all you need. After step 2 has
+finished once, run from PowerShell in the repository folder:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\build_vita.ps1 -Locale es -Rom "C:\path\to\rojofuego.gba"
+```
+
+The result is `build-vita-es\pokefirered.vpk`. The script checks that the dump is the clean
+official Spanish ROM (SHA-1), copies the sources into `build-vita-es\stage\` and puts the
+Spanish text and graphics of your cartridge there; the repository itself stays in English and
+nothing from your ROM leaves your PC. The Spanish VPK installs over the English one (same title
+ID, same saves in `ux0:data/FRVITA/`).
+
 ## 3. Install
 
 1. Copy `FireRedVita.vpk` to the Vita (USB or FTP with VitaShell).

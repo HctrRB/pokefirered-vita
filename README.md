@@ -81,6 +81,14 @@ selects, a second tap on the selection confirms):
 - **Menu themes** (`OPTIONS > GENERAL > MENU COLOR`): `GBA` (FireRed default), `RED`, `EMERALD`,
   `CRYSTAL`, `TROPICAL`, and `ROYAL`.
 
+### Languages
+
+- **English** (default) and **Spanish** (*Pokémon Edición Rojo Fuego*). One build = one language:
+  a Spanish build takes the whole game text, the text-bearing graphics and the Easy Chat order from
+  **your own** Spanish cartridge, and translates the native interface. No game text is stored in
+  this repository. How to build it: [docs/guides/BUILD_YOUR_OWN.md](docs/guides/BUILD_YOUR_OWN.md#spanish-version);
+  adding another language: [docs/guides/ADDING_A_LANGUAGE.md](docs/guides/ADDING_A_LANGUAGE.md).
+
 ### Extras & multicore architecture
 
 - Physical/Special move split, Mega Evolution, reusable TMs, field HM shortcuts, EXP Share & EXP
@@ -173,6 +181,7 @@ Buttons can be remapped in Options. Settings and saves live in `ux0:data/FRVITA/
 |---|---|
 | [docs/guides/BUILD_YOUR_OWN.md](docs/guides/BUILD_YOUR_OWN.md) ([español](docs/guides/BUILD_YOUR_OWN.es.md)) | Make your own VPK from your cartridge, step by step |
 | [docs/guides/BUILD.md](docs/guides/BUILD.md) | Toolchain, build steps, CMake options, build-time checks, installing |
+| [docs/guides/ADDING_A_LANGUAGE.md](docs/guides/ADDING_A_LANGUAGE.md) | Languages: interface catalog, game text from an official ROM, layout patches |
 | [docs/guides/DEBUGGING.md](docs/guides/DEBUGGING.md) | Logs, per-frame telemetry, thread violations, crash dumps |
 | [docs/README.md](docs/README.md) | Index of the technical documentation |
 | [docs/reference/ARCHITECTURE.md](docs/reference/ARCHITECTURE.md) | Game side and platform side, boot, frame loop, FireRed specifics |

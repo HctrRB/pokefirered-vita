@@ -77,6 +77,22 @@ que puedes volver a ejecutarlo después de un fallo.
 `build_all.bat` otra vez. La ROM solo se pide la primera vez: si una versión nueva necesita otros
 archivos del juego, el script los descarga solo.
 
+## Versión en español
+
+Para jugar en español necesitas un volcado de **tu cartucho de Pokémon Edición Rojo Fuego**
+(`BPRS`). También sirve como volcado base del paso 2, así que con el cartucho español basta. Cuando
+el paso 2 haya terminado una vez, ejecuta desde PowerShell en la carpeta del repositorio:
+
+```powershell
+powershell.exe -ExecutionPolicy Bypass -File .\build_vita.ps1 -Locale es -Rom "C:\ruta\a\rojofuego.gba"
+```
+
+El resultado es `build-vita-es\pokefirered.vpk`. El script comprueba que el volcado sea la ROM
+española oficial y limpia (SHA-1), copia las fuentes en `build-vita-es\stage\` y pone allí los
+textos y gráficos en español de tu cartucho; el repositorio sigue en inglés y nada de tu ROM sale
+de tu PC. La VPK española se instala encima de la inglesa (mismo title ID y mismas partidas en
+`ux0:data/FRVITA/`).
+
 ## 3. Instala
 
 1. Copia `FireRedVita.vpk` a la Vita (por USB o FTP con VitaShell).

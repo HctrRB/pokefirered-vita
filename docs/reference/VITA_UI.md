@@ -41,6 +41,18 @@ The native 960x544 pipeline resolves the three structural limits of the 320x240 
    authentic **Pokémon FireRed GBA** colors (vermilion `#D54129`, crimson `#9C2418`, `type1`
    indigo-slate `#8B8BCD` borders, cobalt slate strips/rails, warm ivory panels `#F4F4EA`).
 
+### Languages (`ui_locale.c`, [ADDING_A_LANGUAGE.md](../guides/ADDING_A_LANGUAGE.md))
+
+Every UI string is English in the code and goes through `UI_TR` (literal, cached per call site) or
+`UiLocale_Lookup` (table strings marked with `UI_N`, including the Options rows in
+`src/platform/vita/vita_extras.c`). English builds compile both to their argument; a non-English
+build (`UI_LOCALE_CATALOG`) looks the English text up by FNV-1a hash in `app0:ui2/locale.bin`, which
+`UiLocale_Load` reads once in `Ui_Init` before the boot snapshot and the game thread, so Core 0 and
+Core 1 read it without locks and a SoftReset keeps it. GBA text reaches the UI as UTF-8
+(`UiGame_Text`), and `UiText_Draw` folds any Latin-1 letter the build's atlas lacks to its base
+letter. Prompts that embed a name use one format string split around `%s` (battle
+`"What will %s do?"`), so each language keeps its own word order.
+
 ### 1. Multicore Lock-Free UI Architecture (`src/platform/ui/`)
 
 Ported directly from `pokeemerald-vita-3ds/src/platform/ui/`:

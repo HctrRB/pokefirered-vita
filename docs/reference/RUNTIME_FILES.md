@@ -13,7 +13,8 @@ What the game reads inside the VPK (`app0:`) and reads or writes on the PS Vita 
 | `eboot.bin` | Current | PS Vita OS | Signed SELF binary compiled from `pokefirered.velf` |
 | `sce_sys/` | Current | LiveArea | Application icon (`icon0.png`), background (`pic0.png`), and LiveArea template (`livearea/contents/template.xml`, `bg.png`, `startup.png`) |
 | `voxel/` | Current (`Phase F5a+`) | `src/platform/voxel/` | Kanto 3D voxel world assets (`buildings.bin`, `relief.bin`, `regions.bin`, `signposts.bin`, `trees.rgba5551`; [ASSETS.md](ASSETS.md)) |
-| `ui2/ui_atlas.bin` | Current (`Phase F7a+`) | `src/platform/ui/ui_assets.c` | Fixed atlas (baked theme fonts and sprites) for the 960x544 Native 16:9 UI ([VITA_UI.md](VITA_UI.md)) |
+| `ui2/ui_atlas.bin` | Current (`Phase F7a+`) | `src/platform/ui/ui_assets.c` | Fixed atlas (baked theme fonts and sprites) for the 960x544 Native 16:9 UI ([VITA_UI.md](VITA_UI.md)); a non-English build packs its own copy with the language's extra letters |
+| `ui2/locale.bin` | Non-English builds only | `src/platform/ui/ui_locale.c` | `UILC` v1 catalog of the native UI's translated strings, compiled from `tools/locales/<code>/ui.json` and loaded once by `Ui_Init` before the game thread starts |
 | `followers/` | Optional (`Phase F5b+`) | `voxel_follower.c` | Optional bundled follower sprite container (also searched in `ux0:data/FRVITA/followers/`) |
 
 ## On the memory card (`ux0:data/FRVITA/`)
