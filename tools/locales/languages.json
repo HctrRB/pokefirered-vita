@@ -1,0 +1,39 @@
+{
+  "_comment": [
+    "The only list of the languages a build can be made in (docs/guides/ADDING_A_LANGUAGE.md).",
+    "code: VITA_LOCALE / -Locale value and tools/locales/<code>/ folder. gameLanguage: LANGUAGE_*",
+    "the game is built with (GAME_LANGUAGE). romCode: 4th letter of the cartridge's game code",
+    "(BPR?), null when the language has no official cartridge. romSha1: SHA-1 of the clean official",
+    "cartridge dump the game text is extracted from (source rom). letters: the letters beyond ASCII",
+    "and the base set (BASE_LETTERS in tools/locales/compile_ui.py) this language's UI fonts need;",
+    "every one is baked once by tools/ui2/bake_locale_glyphs.py and only the build's own go into its",
+    "atlas (tools/ui2/build_atlas.py --locale). source: none (the sources' English) or rom (the",
+    "player's official cartridge, through tools/locales/<code>/manifest.json.gz and",
+    "tools/locales/localize.py). units: imperial or metric, for the Pokedex heights and",
+    "weights the native UI shows (UI_METRIC_UNITS)."
+  ],
+  "languages": [
+    {
+      "code": "en",
+      "name": "English",
+      "gameLanguage": "LANGUAGE_ENGLISH",
+      "romCode": "E",
+      "romSha1": null,
+      "source": "none",
+      "base": null,
+      "letters": "",
+      "units": "imperial"
+    },
+    {
+      "code": "es",
+      "name": "Español",
+      "gameLanguage": "LANGUAGE_SPANISH",
+      "romCode": "S",
+      "romSha1": "ab8f6bfe0ccdaf41188cd015c8c74c314d02296a",
+      "source": "rom",
+      "base": null,
+      "letters": "ÁÍÓÚÜÑáíóúüñ¡¿ªº",
+      "units": "metric"
+    }
+  ]
+}

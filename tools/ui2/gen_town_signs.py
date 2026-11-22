@@ -1,5 +1,13 @@
-"""Generates src/platform/ui/ui_town_signs.h from Kanto & Sevii town sign texts."""
+"""Generates src/platform/ui/ui_town_signs.h from Kanto & Sevii town sign texts.
 
+    python tools/ui2/gen_town_signs.py [--root <tree>]
+
+--root (default: the repository) reads and writes another source tree: a translated build's
+staging tree (tools/locales/localize.py), whose sign texts are the ROM's bytes as `.byte` lines;
+those are decoded through charmap.txt to UTF-8.
+"""
+
+import argparse
 import os
 import re
 
@@ -28,6 +36,40 @@ TOWNS = [
 ]
 
 
+def load_decoder(root):
+    """GBA byte -> its charmap text (the first character the charmap gives that byte)"""
+    dec = {}
+    for line in open(os.path.join(root, "charmap.txt"), encoding="utf-8"):
+        line = line.split("@")[0].strip()
+        m = re.match(r"^'(.+)'\s*=\s*([0-9A-Fa-f]{2})$", line)
+        if m:
+            dec.setdefault(int(m.group(2), 16), m.group(1))
+    return dec
+
+
+def bytes_to_source_text(data, dec):
+    """ROM text bytes as the .string syntax decode_gba_text reads ("\\n", "{...}" for codes)"""
+    out, i = [], 0
+    while i < len(data):
+        b = data[i]
+        if b == 0xFF:
+            break
+        if b == 0xFE:
+            out.append("\\n")
+        elif b in (0xFA, 0xFB):
+            out.append("\\p")
+        elif b == 0xFC:
+            i += 2                      # control code + one argument byte: dropped
+            continue
+        elif b == 0xFD:
+            i += 2                      # placeholder ({PLAYER}, ...): dropped
+            continue
+        else:
+            out.append(dec.get(b, ""))
+        i += 1
+    return "".join(out) + "$"
+
+
 def decode_gba_text(raw):
     # Replace GBA line breaks and special glyphs with readable UTF-8.
     text = raw.replace("\\n", "\n").replace("\\l", " ").replace("\\p", " ")
@@ -37,8 +79,8 @@ def decode_gba_text(raw):
     return text.rstrip("$")
 
 
-def extract_motto(rel_path, label):
-    full_path = os.path.join(ROOT, rel_path)
+def extract_motto(rel_path, label, root=ROOT, dec=None):
+    full_path = os.path.join(root, rel_path)
     with open(full_path, "r", encoding="utf-8") as fh:
         content = fh.read()
     m = re.search(rf"^{re.escape(label)}::\s*(.*?)(?=^[A-Za-z0-9_]+::|\Z)",
@@ -46,6 +88,11 @@ def extract_motto(rel_path, label):
     if not m:
         raise ValueError(f"Missing label {label} in {rel_path}")
     strings = re.findall(r'\.string\s+"([^"]*)"', m.group(1))
+    if not strings and dec is not None:
+        raw = re.findall(r"\.byte\s+([0-9A-Fa-fx, ]+)", m.group(1))
+        data = bytes(int(v, 16) for line in raw for v in line.replace(" ", "").split(",") if v)
+        if data:
+            strings = [bytes_to_source_text(data, dec)]
     if not strings:
         raise ValueError(f"No .string entries for {label} in {rel_path}")
     joined = decode_gba_text("".join(strings))
@@ -63,10 +110,15 @@ def c_escape(text):
 
 
 def main():
-    os.makedirs(os.path.dirname(OUT_PATH), exist_ok=True)
+    ap = argparse.ArgumentParser(description="Generates the native UI's town sign mottos")
+    ap.add_argument("--root", default=ROOT, help="source tree to read and write (default: the repository)")
+    root = os.path.abspath(ap.parse_args().root)
+    out_path = os.path.join(root, "src", "platform", "ui", "ui_town_signs.h")
+    dec = load_decoder(root)
+    os.makedirs(os.path.dirname(out_path), exist_ok=True)
     rows = []
     for mapsec, rel_path, label in TOWNS:
-        motto = extract_motto(rel_path, label)
+        motto = extract_motto(rel_path, label, root, dec)
         rows.append((mapsec, motto))
 
     lines = [
@@ -106,9 +158,11 @@ def main():
         "",
     ])
 
-    with open(OUT_PATH, "w", encoding="utf-8", newline="\n") as fh:
-        fh.write("\n".join(lines))
-    print(f"Wrote {OUT_PATH} with {len(rows)} town/city/island mottos")
+    text = "\n".join(lines)
+    if not os.path.exists(out_path) or open(out_path, encoding="utf-8", newline="").read() != text:
+        with open(out_path, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write(text)
+    print(f"Wrote {out_path} with {len(rows)} town/city/island mottos")
 
 
 if __name__ == "__main__":

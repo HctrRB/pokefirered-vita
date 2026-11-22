@@ -90,7 +90,40 @@ endif()
 
 # Active in Phase F3+: MainThread_Boot/MainThread_Run split and GameFrame boundary in place.
 option(VITA_CORE_BOUNDARY "Verify Core 0/1/2 thread boundary on linked ELF (Phase F3+)" ON)
+# A translated build compiles a staging tree (tools/locales/localize.py), not a git
+# checkout: it passes VITA_DOC_CHECK=OFF, since the checker reads the repository and the English
+# build already checks the documents.
 option(VITA_DOC_CHECK "Verify docs against code and links (tools/doc_check)" ON)
+
+# Language of the build (docs/guides/ADDING_A_LANGUAGE.md): one code of tools/locales/languages.json, the only
+# list of languages. It sets the game's GAME_LANGUAGE and, for any language but English, the native
+# UI's catalog (ui2/locale.bin) and its atlas; metric languages show metric Pokedex units.
+set(VITA_LOCALE "en" CACHE STRING "Language of the build: a code in tools/locales/languages.json")
+set(LANGUAGES_JSON_FILE "${ROOT}/tools/locales/languages.json")
+set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS "${LANGUAGES_JSON_FILE}")
+file(READ "${LANGUAGES_JSON_FILE}" LANGUAGES_JSON)
+string(JSON LANGUAGE_COUNT LENGTH "${LANGUAGES_JSON}" languages)
+math(EXPR LANGUAGE_LAST "${LANGUAGE_COUNT} - 1")
+set(LOCALE_GAME_LANGUAGE "")
+set(LOCALE_UNITS "")
+foreach(LANGUAGE_INDEX RANGE ${LANGUAGE_LAST})
+    string(JSON LANGUAGE_CODE GET "${LANGUAGES_JSON}" languages ${LANGUAGE_INDEX} code)
+    if(LANGUAGE_CODE STREQUAL VITA_LOCALE)
+        string(JSON LOCALE_GAME_LANGUAGE GET "${LANGUAGES_JSON}" languages ${LANGUAGE_INDEX} gameLanguage)
+        string(JSON LOCALE_UNITS GET "${LANGUAGES_JSON}" languages ${LANGUAGE_INDEX} units)
+    endif()
+endforeach()
+if(NOT LOCALE_GAME_LANGUAGE)
+    message(FATAL_ERROR "VITA_LOCALE '${VITA_LOCALE}' is not in ${LANGUAGES_JSON_FILE}")
+endif()
+list(APPEND GAME_DEFINES -DGAME_LANGUAGE=${LOCALE_GAME_LANGUAGE})
+if(NOT VITA_LOCALE STREQUAL "en")
+    list(APPEND GAME_DEFINES -DUI_LOCALE_CATALOG)
+endif()
+if(LOCALE_UNITS STREQUAL "metric")
+    list(APPEND GAME_DEFINES -DUI_METRIC_UNITS)
+endif()
+message(STATUS "Build language: ${VITA_LOCALE} (${LOCALE_GAME_LANGUAGE}, ${LOCALE_UNITS})")
 
 string(REPLACE ";" " " GAME_DEFINES_STR "${GAME_DEFINES}")
 
@@ -361,6 +394,20 @@ if(VITA_DOC_CHECK)
     add_dependencies(eboot.bin-self doc_check)
 endif()
 
+# The list of the UI's strings (tools/locales/en/ui.json, the keys of every catalog) must match the
+# UI_TR / UI_N strings of the code, or a new string would never reach the translators.
+file(GLOB_RECURSE UI_TEXT_SOURCES CONFIGURE_DEPENDS "${ROOT}/src/platform/*.c" "${ROOT}/src/platform/*.h")
+set(UI_STRINGS_STAMP "${CMAKE_BINARY_DIR}/ui_strings.ok")
+add_custom_command(
+    OUTPUT "${UI_STRINGS_STAMP}"
+    COMMAND "${Python3_EXECUTABLE}" "${ROOT}/tools/locales/extract_ui.py" --check
+    COMMAND "${CMAKE_COMMAND}" -E touch "${UI_STRINGS_STAMP}"
+    DEPENDS ${UI_TEXT_SOURCES} "${ROOT}/tools/locales/extract_ui.py" "${ROOT}/tools/locales/en/ui.json"
+    COMMENT "Checking the UI string list (tools/locales/extract_ui.py)"
+    VERBATIM)
+add_custom_target(ui_strings ALL DEPENDS "${UI_STRINGS_STAMP}")
+add_dependencies(eboot.bin-self ui_strings)
+
 # --- VPK Packaging ---
 set(SCE_SYS "${ROOT}/vita/sce_sys")
 set(SCE_SYS_FILES
@@ -388,12 +435,32 @@ foreach(VA IN LISTS VOXEL_ASSETS)
     list(APPEND VPK_FILE_DEPS "${VA}")
 endforeach()
 
+# A non-English build packs the atlas with its language's letters, which build_vita.sh writes into
+# the build folder (tools/ui2/build_atlas.py --locale needs Pillow, which the Python CMake finds may
+# not have), and the UI catalog compiled from tools/locales/<code>/ui.json.
 file(GLOB UI2_ASSETS CONFIGURE_DEPENDS "${ROOT}/assets/ui2/*.bin")
 foreach(UA IN LISTS UI2_ASSETS)
     get_filename_component(UA_NAME "${UA}" NAME)
+    if(NOT VITA_LOCALE STREQUAL "en" AND UA_NAME STREQUAL "ui_atlas.bin")
+        set(UA "${CMAKE_BINARY_DIR}/ui2/ui_atlas.bin")
+        if(NOT EXISTS "${UA}")
+            message(FATAL_ERROR "${UA} is missing: build a non-English VPK with build_vita.sh (VITA_LOCALE=${VITA_LOCALE})")
+        endif()
+    endif()
     list(APPEND VPK_FILE_ARGS -a "${UA}=ui2/${UA_NAME}")
     list(APPEND VPK_FILE_DEPS "${UA}")
 endforeach()
+if(NOT VITA_LOCALE STREQUAL "en")
+    set(LOCALE_BIN "${CMAKE_BINARY_DIR}/ui2/locale.bin")
+    add_custom_command(OUTPUT "${LOCALE_BIN}"
+        COMMAND "${Python3_EXECUTABLE}" "${ROOT}/tools/locales/compile_ui.py" --locale "${VITA_LOCALE}" --out "${LOCALE_BIN}"
+        DEPENDS "${ROOT}/tools/locales/compile_ui.py" "${LANGUAGES_JSON_FILE}"
+                "${ROOT}/tools/locales/en/ui.json" "${ROOT}/tools/locales/${VITA_LOCALE}/ui.json"
+        COMMENT "Compiling the ${VITA_LOCALE} UI catalog"
+        VERBATIM)
+    list(APPEND VPK_FILE_ARGS -a "${LOCALE_BIN}=ui2/locale.bin")
+    list(APPEND VPK_FILE_DEPS "${LOCALE_BIN}")
+endif()
 
 # HGSS Follower Pokemon assets packed into app0:followers/followers.pak
 file(GLOB_RECURSE FOLLOWER_ASSETS CONFIGURE_DEPENDS

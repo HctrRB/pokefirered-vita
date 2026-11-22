@@ -4,6 +4,13 @@ Combines pre-baked UI & theme bitmap/antialiased font sheets (ui_fonts.*, theme_
 with authentic FireRed sprites sliced from graphics/ and src/platform/fr3ds/fr_ui_icons.h,
 tightly shelf-packed into a 1024xH 16-bit atlas texture (H <= 1280 so >= 128 64x64 runtime
 sprite cells remain in the 1024x2048 texture).
+
+    python tools/ui2/build_atlas.py [--locale <code>] [--out <path>]
+
+--locale (default en) adds that language's extra letters (tools/locales/languages.json, baked once
+into tools/ui2/fonts/locale_glyphs.* by bake_locale_glyphs.py) to every font; English adds none, so
+the default output stays byte-identical. A non-English build writes its own atlas with --out
+(build-vita-<code>/ui2/ui_atlas.bin) and never touches assets/ui2/ui_atlas.bin.
 """
 
 import argparse
@@ -20,6 +27,7 @@ ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 FONTS_DIR = os.path.join(HERE, "fonts")
 OUT_BIN = os.path.join(ROOT, "assets", "ui2", "ui_atlas.bin")
 OUT_HDR = os.path.join(ROOT, "src", "platform", "ui", "ui_sprite_ids.h")
+LANGUAGES = os.path.join(ROOT, "tools", "locales", "languages.json")
 
 MAGIC = 0x33414955  # "UIA3" little-endian
 VERSION = 3
@@ -310,6 +318,13 @@ def extract_glyph_texels(sheet_img, x, y, w, h):
     return texels
 
 
+def locale_letters(code):
+    for lang in json.load(open(LANGUAGES, "r", encoding="utf-8"))["languages"]:
+        if lang["code"] == code:
+            return lang["letters"]
+    raise SystemExit(f"unknown locale '{code}': not in {LANGUAGES}")
+
+
 def build_fonts(locale_letters):
     fonts = []
     sheet_cache = {}
@@ -322,6 +337,10 @@ def build_fonts(locale_letters):
     locale_by_key = {}
     if locale_letters:
         lj = json.load(open(os.path.join(FONTS_DIR, "locale_glyphs.json"), "r", encoding="utf-8"))
+        unbaked = set(locale_letters) - set(lj["letters"])
+        if unbaked:
+            raise SystemExit(f"letters not baked yet: {''.join(sorted(unbaked))} "
+                             "(run tools/ui2/bake_locale_glyphs.py)")
         limg = get_img(os.path.join(FONTS_DIR, "locale_glyphs.png"))
         allowed = {ord(c) for c in locale_letters}
         for lf in lj["fonts"]:
@@ -360,11 +379,13 @@ def build_fonts(locale_letters):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--locale", default="", help="Optional locale code or letter set to include")
+    parser.add_argument("--locale", default="en", help="language code in tools/locales/languages.json")
+    parser.add_argument("--out", default=OUT_BIN, help="atlas file to write (default assets/ui2/ui_atlas.bin)")
     args = parser.parse_args()
+    out_bin = os.path.abspath(args.out)
 
     sprites = build_sprites()
-    fonts = build_fonts(args.locale)
+    fonts = build_fonts(locale_letters(args.locale))
 
     if len(sprites) > MAX_SPRITES:
         raise SystemExit(f"Too many sprites: {len(sprites)} > {MAX_SPRITES}")
@@ -425,8 +446,8 @@ def main():
             glyph_records.append((cp, gx, gy, gw, gh, xoff, yoff, adv))
         font_records.append((f["face"], f["px"], f["ascent"], f["lineH"], len(f["glyphs"]), first_glyph))
 
-    os.makedirs(os.path.dirname(OUT_BIN), exist_ok=True)
-    with open(OUT_BIN, "wb") as fh:
+    os.makedirs(os.path.dirname(out_bin), exist_ok=True)
+    with open(out_bin, "wb") as fh:
         fh.write(struct.pack("<8I", MAGIC, VERSION, TEX_W, tex_h,
                              len(font_records), len(sprite_records), white_x, white_y))
         for face, px, ascent, line_h, gcount, first_g in font_records:
@@ -466,13 +487,17 @@ def main():
         "#endif // UI_SPRITE_IDS_H",
         "",
     ])
+    # Sprite ids do not depend on the locale: rewrite the header only when it changes so a locale
+    # atlas build never dirties the tree nor forces a recompile.
+    header = "\n".join(hdr_lines)
     os.makedirs(os.path.dirname(OUT_HDR), exist_ok=True)
-    with open(OUT_HDR, "w", encoding="utf-8", newline="\n") as fh:
-        fh.write("\n".join(hdr_lines))
+    if not os.path.exists(OUT_HDR) or open(OUT_HDR, "r", encoding="utf-8", newline="").read() != header:
+        with open(OUT_HDR, "w", encoding="utf-8", newline="\n") as fh:
+            fh.write(header)
 
     cells_left = ((2048 - tex_h) // 64) * 16
-    bin_kb = os.path.getsize(OUT_BIN) / 1024.0
-    print(f"Wrote {OUT_BIN} ({bin_kb:.1f} KB): {TEX_W}x{tex_h} (used {used_h}), "
+    bin_kb = os.path.getsize(out_bin) / 1024.0
+    print(f"Wrote {out_bin} [{args.locale}] ({bin_kb:.1f} KB): {TEX_W}x{tex_h} (used {used_h}), "
           f"{len(font_records)} fonts ({len(glyph_records)} glyphs), {len(sprite_records)} sprites, "
           f"{cells_left} runtime 64x64 cells remaining")
 
