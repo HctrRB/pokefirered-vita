@@ -232,27 +232,39 @@ static const AtlasFont *FindFont(uint8_t face, const uint8_t px)
     return best != NULL ? best : &sFonts[0];
 }
 
+// Decodes one UTF-8 code point (1-4 bytes) and advances past it. A malformed or truncated sequence
+// yields '?' and advances only past the bytes already validated, so the terminating NUL is never
+// skipped and nothing past it is read.
 static uint32_t NextUtf8(const char **const p)
 {
-    const uint8_t *s = (const uint8_t *)*p;
+    const uint8_t *const s = (const uint8_t *)*p;
     const uint32_t b0 = s[0];
     if (b0 < 0x80U)
     {
         *p = (const char *)(s + 1);
         return b0;
     }
-    if ((b0 & 0xE0U) == 0xC0U && (s[1] & 0xC0U) == 0x80U)
+    uint32_t len;
+    uint32_t cp;
+    if ((b0 & 0xE0U) == 0xC0U)      { len = 2U; cp = b0 & 0x1FU; }
+    else if ((b0 & 0xF0U) == 0xE0U) { len = 3U; cp = b0 & 0x0FU; }
+    else if ((b0 & 0xF8U) == 0xF0U) { len = 4U; cp = b0 & 0x07U; }
+    else
     {
-        *p = (const char *)(s + 2);
-        return ((b0 & 0x1FU) << 6) | (s[1] & 0x3FU);
+        *p = (const char *)(s + 1);   // stray continuation byte or invalid lead byte
+        return '?';
     }
-    if ((b0 & 0xF0U) == 0xE0U && (s[1] & 0xC0U) == 0x80U && (s[2] & 0xC0U) == 0x80U)
+    for (uint32_t i = 1U; i < len; i++)
     {
-        *p = (const char *)(s + 3);
-        return ((b0 & 0x0FU) << 12) | ((s[1] & 0x3FU) << 6) | (s[2] & 0x3FU);
+        if ((s[i] & 0xC0U) != 0x80U)   // also stops on the terminating NUL
+        {
+            *p = (const char *)(s + i);
+            return '?';
+        }
+        cp = (cp << 6) | (s[i] & 0x3FU);
     }
-    *p = (const char *)(s + 1);
-    return '?';
+    *p = (const char *)(s + len);
+    return cp;
 }
 
 static const AtlasGlyph *FindGlyphBinary(const AtlasFont *const font, const uint32_t cp)
@@ -273,18 +285,34 @@ static const AtlasGlyph *FindGlyphBinary(const AtlasFont *const font, const uint
     return NULL;
 }
 
+// Base letter drawn for a Latin-1 letter (U+00C0-U+00FF) the atlas lacks, so a name or a
+// translated string stays readable when the active locale did not bake that glyph (each
+// build's atlas packs only its own language's letters, tools/ui2/build_atlas.py --locale). '?' marks the few signs that
+// have no sensible ASCII stand-in.
+static const char sLatin1Fold[64 + 1] =
+    "AAAAAAAC" "EEEEIIII" "DNOOOOOx" "OUUUUY?s"
+    "aaaaaaac" "eeeeiiii" "dnooooo?" "ouuuuy?y";
+_Static_assert(sizeof(sLatin1Fold) == 65, "sLatin1Fold covers U+00C0-U+00FF");
+
 static uint32_t AccentFallback(const uint32_t cp)
 {
+    if (cp >= 0xC0U && cp <= 0xFFU)
+        return (uint8_t)sLatin1Fold[cp - 0xC0U];
     switch (cp)
     {
-    case 0x00E9u: return 'e';
-    case 0x00C9u: return 'E';
-    case 0x00E1u: return 'a';
-    case 0x00EDu: return 'i';
-    case 0x00F3u: return 'o';
-    case 0x00FAu: return 'u';
-    case 0x00F1u: return 'n';
-    case 0x00D1u: return 'N';
+    case 0x00A1u: return '!';    // ¡
+    case 0x00BFu: return '?';    // ¿
+    case 0x00AAu: return 'a';    // ª
+    case 0x00BAu: return 'o';    // º
+    case 0x00B7u: return '.';    // ·
+    case 0x00D7u: return 'x';    // ×
+    case 0x0152u: return 'O';    // Œ
+    case 0x0153u: return 'o';    // œ
+    case 0x2018u:
+    case 0x2019u: return '\'';
+    case 0x201Cu:
+    case 0x201Du: return '"';
+    case 0x2026u: return '.';    // …
     default:      return '?';
     }
 }

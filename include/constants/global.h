@@ -26,7 +26,8 @@
 #define LANGUAGE_SPANISH  7
 #define NUM_LANGUAGES     7
 
-#ifdef ENGLISH
+// The Vita build passes -DGAME_LANGUAGE from tools/locales/languages.json (VITA_LOCALE).
+#if defined(ENGLISH) && !defined(GAME_LANGUAGE)
 #define GAME_LANGUAGE (LANGUAGE_ENGLISH)
 #endif
 

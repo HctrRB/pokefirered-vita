@@ -74,6 +74,8 @@ void Ui_Init(void)
     sSavedDepth = 0;
     UiTheme_Refresh();
     UiAssets_Load();
+    // Before the boot snapshot and the game thread: the catalog is immutable once Core 1 runs.
+    UiLocale_Load();
     UiDraw_Begin();
     UiDraw_Publish(0.0f);
 }

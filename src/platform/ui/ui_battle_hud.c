@@ -543,6 +543,20 @@ static void CommandsGba(u8 b, int32_t by, int32_t bh, bool safari, bool tap, int
     }
 }
 
+// Splits a translated "...%s..." prompt around its one %s so the battler's name can be drawn in its
+// own colour while each language keeps its own word order ("What will %s do?" / "¿Qué hará %s?").
+// `pre` receives the text before %s (truncated to fit); the return value is the text after it, or ""
+// when the format has no %s.
+static const char *SplitNameFormat(const char *const fmt, char *const pre, const size_t preCap)
+{
+    const char *const at = strstr(fmt, "%s");
+    const size_t len = (at != NULL) ? (size_t)(at - fmt) : strlen(fmt);
+    const size_t n = (len < preCap) ? len : preCap - 1U;
+    memcpy(pre, fmt, n);
+    pre[n] = '\0';
+    return (at != NULL) ? at + 2 : "";
+}
+
 static void PromptTextGba(u8 b, int32_t by, int32_t bh, bool safari)
 {
     UiW_GbaMsg(6, by, 566, bh, true, true);
@@ -550,9 +564,11 @@ static void PromptTextGba(u8 b, int32_t by, int32_t bh, bool safari)
     if (safari) UiGame_PlayerName(name, sizeof(name));
     else UiGame_Text(gBattleMons[b].nickname, name, sizeof(name));
     const int32_t ty = by + (bh - 36) / 2;
-    const int32_t w1 = UiW_GbaText(UI_FACE_VT323, 36, 36, ty, UI_TR("What will "), C_WHITE, UI_GBA_SHAD_DARK);
+    char pre[48];
+    const char *const post = SplitNameFormat(UI_TR("What will %s do?"), pre, sizeof(pre));
+    const int32_t w1 = UiW_GbaText(UI_FACE_VT323, 36, 36, ty, pre, C_WHITE, UI_GBA_SHAD_DARK);
     const int32_t w2 = UiW_GbaText(UI_FACE_VT323, 36, 36 + w1, ty, name, UI_RGBA(255, 230, 57, 255), UI_GBA_SHAD_DARK);
-    UiW_GbaText(UI_FACE_VT323, 36, 36 + w1 + w2, ty, UI_TR(" do?"), C_WHITE, UI_GBA_SHAD_DARK);
+    UiW_GbaText(UI_FACE_VT323, 36, 36 + w1 + w2, ty, post, C_WHITE, UI_GBA_SHAD_DARK);
 }
 
 static void TacPill(int32_t *px, int32_t y, const char *txt, bool stab)
@@ -733,8 +749,12 @@ static void PromptText(u8 b, bool safari)
     if (safari) UiGame_PlayerName(name, sizeof(name));
     else UiGame_Text(gBattleMons[b].nickname, name, sizeof(name));
     UiText_Draw(UI_FACE_VT323, UI_DIALOG_PX, 28, BOX_Y + 22, UI_TR("What will"), UI_COL_INK);
-    const int32_t w = UiText_Draw(UI_FACE_VT323, UI_DIALOG_PX, 28, BOX_Y + 72, name, TH->em);
-    UiText_Draw(UI_FACE_VT323, UI_DIALOG_PX, 28 + w, BOX_Y + 72, UI_TR(" do?"), UI_COL_INK);
+    // Second line: the name plus the rest of the question, in the language's order ("%s do?").
+    char pre[32];
+    const char *const post = SplitNameFormat(UI_TR("%s do?"), pre, sizeof(pre));
+    const int32_t w0 = UiText_Draw(UI_FACE_VT323, UI_DIALOG_PX, 28, BOX_Y + 72, pre, UI_COL_INK);
+    const int32_t w = UiText_Draw(UI_FACE_VT323, UI_DIALOG_PX, 28 + w0, BOX_Y + 72, name, TH->em);
+    UiText_Draw(UI_FACE_VT323, UI_DIALOG_PX, 28 + w0 + w, BOX_Y + 72, post, UI_COL_INK);
 }
 
 static void Moves(u8 b, int st, bool tap, int32_t tx, int32_t ty)

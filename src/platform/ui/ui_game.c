@@ -85,6 +85,116 @@ static void AppendChar(char *const dst, const size_t cap, size_t *const pos, con
         dst[(*pos)++] = c;
 }
 
+// UTF-8 text of one GBA symbol or accented letter (charmap.txt, international layout shared by
+// every Western FireRed release), or NULL for glyphs the native UI never shows (arrows, BLOCK,
+// empty rectangle). Ellipsis, bullet and gender signs keep their historical ASCII stand-ins so the
+// English build renders exactly as before; accented letters are real UTF-8 so a Spanish/European
+// build shows them through the locale glyph sheets (or the folded base letter, see ui_assets.c).
+static const char *GbaSymbolUtf8(const uint8_t c)
+{
+    switch (c)
+    {
+    case CHAR_EXCL_MARK:         return "!";
+    case CHAR_QUESTION_MARK:     return "?";
+    case CHAR_PERIOD:            return ".";
+    case CHAR_HYPHEN:            return "-";
+    case CHAR_BULLET:            return "*";
+    case CHAR_ELLIPSIS:          return "...";
+    case CHAR_DBL_QUOTE_LEFT:
+    case CHAR_DBL_QUOTE_RIGHT:   return "\"";
+    case CHAR_SGL_QUOTE_LEFT:
+    case CHAR_SGL_QUOTE_RIGHT:   return "'";
+    case CHAR_MALE:              return "M";
+    case CHAR_FEMALE:            return "F";
+    case CHAR_CURRENCY:          return "$";
+    case CHAR_COMMA:             return ",";
+    case CHAR_MULT_SIGN:         return "x";
+    case CHAR_SLASH:             return "/";
+    case CHAR_COLON:             return ":";
+    case CHAR_SEMICOLON:         return ";";
+    case CHAR_AMPERSAND:         return "&";
+    case CHAR_PLUS:              return "+";
+    case CHAR_EQUALS:            return "=";
+    case CHAR_PERCENT:           return "%";
+    case CHAR_LEFT_PAREN:        return "(";
+    case CHAR_RIGHT_PAREN:       return ")";
+    case CHAR_LESS_THAN:         return "<";
+    case CHAR_GREATER_THAN:      return ">";
+    case CHAR_LV:                return "Lv.";
+    case CHAR_PK:                return "PK";
+    case CHAR_MN:                return "MN";
+    case CHAR_PO:                return "PO";
+    case CHAR_KE:                return "KE";
+    case CHAR_SUPER_ER:          return "er";
+    case CHAR_SUPER_E:           return "e";
+    case CHAR_SUPER_RE:          return "re";
+    case CHAR_INV_EXCL_MARK:     return "¡";  // ¡
+    case CHAR_INV_QUESTION_MARK: return "¿";  // ¿
+    case CHAR_FEMININE_ORDINAL:  return "ª";  // ª
+    case CHAR_MASCULINE_ORDINAL: return "º";  // º
+    case CHAR_A_GRAVE:           return "À";
+    case CHAR_A_ACUTE:           return "Á";
+    case CHAR_A_CIRCUMFLEX:      return "Â";
+    case CHAR_A_DIAERESIS:       return "Ä";
+    case CHAR_C_CEDILLA:         return "Ç";
+    case CHAR_E_GRAVE:           return "È";
+    case CHAR_E_ACUTE:           return "É";
+    case CHAR_E_CIRCUMFLEX:      return "Ê";
+    case CHAR_E_DIAERESIS:       return "Ë";
+    case CHAR_I_GRAVE:           return "Ì";
+    case CHAR_I_ACUTE:           return "Í";
+    case CHAR_I_CIRCUMFLEX:      return "Î";
+    case CHAR_I_DIAERESIS:       return "Ï";
+    case CHAR_N_TILDE:           return "Ñ";
+    case CHAR_O_GRAVE:           return "Ò";
+    case CHAR_O_ACUTE:           return "Ó";
+    case CHAR_O_CIRCUMFLEX:      return "Ô";
+    case CHAR_O_DIAERESIS:       return "Ö";
+    case CHAR_U_GRAVE:           return "Ù";
+    case CHAR_U_ACUTE:           return "Ú";
+    case CHAR_U_CIRCUMFLEX:      return "Û";
+    case CHAR_U_DIAERESIS:       return "Ü";
+    case CHAR_ESZETT:            return "ß";
+    case CHAR_a_GRAVE:           return "à";
+    case CHAR_a_ACUTE:           return "á";
+    case CHAR_a_CIRCUMFLEX:      return "â";
+    case CHAR_a_DIAERESIS:       return "ä";
+    case CHAR_c_CEDILLA:         return "ç";
+    case CHAR_e_GRAVE:           return "è";
+    case CHAR_e_ACUTE:           return "é";
+    case CHAR_e_CIRCUMFLEX:      return "ê";
+    case CHAR_e_DIAERESIS:       return "ë";
+    case CHAR_i_GRAVE:           return "ì";
+    case CHAR_i_ACUTE:           return "í";
+    case CHAR_i_CIRCUMFLEX:      return "î";
+    case CHAR_i_DIAERESIS:       return "ï";
+    case CHAR_n_TILDE:           return "ñ";
+    case CHAR_o_GRAVE:           return "ò";
+    case CHAR_o_ACUTE:           return "ó";
+    case CHAR_o_CIRCUMFLEX:      return "ô";
+    case CHAR_o_DIAERESIS:       return "ö";
+    case CHAR_u_GRAVE:           return "ù";
+    case CHAR_u_ACUTE:           return "ú";
+    case CHAR_u_CIRCUMFLEX:      return "û";
+    case CHAR_u_DIAERESIS:       return "ü";
+    case CHAR_OE:                return "Œ";  // Œ
+    case CHAR_oe:                return "œ";  // œ
+    default:                     return NULL;
+    }
+}
+
+// Appends a whole UTF-8 sequence or nothing: a multi-byte letter that does not fit before the
+// terminator is dropped, never cut, so NextUtf8() never sees a truncated sequence.
+static void AppendUtf8(char *const dst, const size_t cap, size_t *const pos, const char *const s)
+{
+    size_t n = 0;
+    while (s[n] != '\0')
+        n++;
+    if ((uint8_t)s[0] >= 0x80U && *pos + n >= cap)
+        return;
+    AppendStr(dst, cap, pos, s);
+}
+
 static size_t DecodeGbaString(const uint8_t *src, char *const dst, const size_t cap, const bool keepNewlines)
 {
     if (dst == NULL || cap == 0)
@@ -156,41 +266,9 @@ static size_t DecodeGbaString(const uint8_t *src, char *const dst, const size_t 
         }
         else
         {
-            switch (c)
-            {
-            case CHAR_EXCL_MARK:       AppendChar(dst, cap, &pos, '!'); break;
-            case CHAR_QUESTION_MARK:   AppendChar(dst, cap, &pos, '?'); break;
-            case CHAR_PERIOD:          AppendChar(dst, cap, &pos, '.'); break;
-            case CHAR_HYPHEN:          AppendChar(dst, cap, &pos, '-'); break;
-            case CHAR_BULLET:          AppendChar(dst, cap, &pos, '*'); break;
-            case CHAR_ELLIPSIS:        AppendStr(dst, cap, &pos, "..."); break;
-            case CHAR_DBL_QUOTE_LEFT:
-            case CHAR_DBL_QUOTE_RIGHT: AppendChar(dst, cap, &pos, '"'); break;
-            case CHAR_SGL_QUOTE_LEFT:
-            case CHAR_SGL_QUOTE_RIGHT: AppendChar(dst, cap, &pos, '\''); break;
-            case CHAR_MALE:            AppendStr(dst, cap, &pos, "M"); break;
-            case CHAR_FEMALE:          AppendStr(dst, cap, &pos, "F"); break;
-            case CHAR_CURRENCY:        AppendChar(dst, cap, &pos, '$'); break;
-            case CHAR_COMMA:           AppendChar(dst, cap, &pos, ','); break;
-            case CHAR_MULT_SIGN:       AppendChar(dst, cap, &pos, 'x'); break;
-            case CHAR_SLASH:           AppendChar(dst, cap, &pos, '/'); break;
-            case CHAR_COLON:           AppendChar(dst, cap, &pos, ':'); break;
-            case CHAR_SEMICOLON:       AppendChar(dst, cap, &pos, ';'); break;
-            case CHAR_AMPERSAND:       AppendChar(dst, cap, &pos, '&'); break;
-            case CHAR_PLUS:            AppendChar(dst, cap, &pos, '+'); break;
-            case CHAR_EQUALS:          AppendChar(dst, cap, &pos, '='); break;
-            case CHAR_PERCENT:         AppendChar(dst, cap, &pos, '%'); break;
-            case CHAR_LEFT_PAREN:      AppendChar(dst, cap, &pos, '('); break;
-            case CHAR_RIGHT_PAREN:     AppendChar(dst, cap, &pos, ')'); break;
-            case CHAR_LV:              AppendStr(dst, cap, &pos, "Lv."); break;
-            case CHAR_PK:              AppendStr(dst, cap, &pos, "PK"); break;
-            case CHAR_MN:              AppendStr(dst, cap, &pos, "MN"); break;
-            case CHAR_PO:              AppendStr(dst, cap, &pos, "PO"); break;
-            case CHAR_KE:              AppendStr(dst, cap, &pos, "KE"); break;
-            case CHAR_E_ACUTE:
-            case CHAR_e_ACUTE:         AppendStr(dst, cap, &pos, "\xC3\xA9"); break;
-            default:                   break;
-            }
+            const char *const seq = GbaSymbolUtf8(c);
+            if (seq != NULL)
+                AppendUtf8(dst, cap, &pos, seq);
         }
     }
     dst[pos] = '\0';
