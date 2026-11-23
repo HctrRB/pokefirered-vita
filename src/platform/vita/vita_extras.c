@@ -160,6 +160,8 @@ static void SyncFastSettings(void)
                      (s = FindSetting("trade_evo")) != NULL ? s->value : 0, __ATOMIC_RELAXED);
     __atomic_store_n(&sFastSettings[FAST_EXTRA_UI_THEME],
                      (s = FindSetting("ui_theme")) != NULL ? s->value : 0, __ATOMIC_RELAXED);
+    __atomic_store_n(&sFastSettings[FAST_EXTRA_UI_MODE],
+                     (s = FindSetting("ui_mode")) != NULL ? s->value : 0, __ATOMIC_RELAXED);
     __atomic_store_n(&sFastSettings[FAST_EXTRA_VISIBLE_WILD],
                      (s = FindSetting("visible_wild")) != NULL ? s->value : 0, __ATOMIC_RELAXED);
     __atomic_store_n(&sFastSettings[FAST_EXTRA_ENCOUNTER_RATE],
@@ -310,11 +312,17 @@ void CtrSettings_SetVoxelBattle(bool on) { CtrSettings_SetInt("voxel_battle", on
 bool CtrSettings_ShowFps(void) { return __atomic_load_n(&sFastShowFps, __ATOMIC_RELAXED) != 0; }
 void CtrSettings_SetShowFps(bool on) { CtrSettings_SetInt("show_fps", on ? 1 : 0); }
 
+bool VitaExtras_IsClassicGbaUi(void)
+{
+    return VitaExtras_GetFast(FAST_EXTRA_UI_MODE) != 0;
+}
+
 // ---------------- FireRed Core 1 cheat / enhancement actions & Options table ----------------
 
 const char *const gVitaExtrasOffOn[2] = { UI_N("OFF"), UI_N("ON") };
 static const char *const sHd2dVals[VOXEL_HD2D_COUNT] = { UI_N("OFF"), UI_N("LOW"), UI_N("MED"), UI_N("HIGH") };
 static const char *const sFpsVals[2] = { UI_N("30 FPS"), UI_N("60 FPS") };
+static const char *const sUiModeVals[2] = { UI_N("NATIVE 16:9"), UI_N("CLASSIC GBA") };
 static const char *const sThemeVals[6] = { UI_N("GBA"), UI_N("RED"), UI_N("EMERALD"), UI_N("CRYSTAL"), UI_N("TROPICAL"), UI_N("ROYAL") };
 static const char *const sClockSpeedVals[7] = { UI_N("1X REAL"), "6X", "12X", "24X", "60X", "120X", "1000X" };
 static const char *const sVisibleWildVals[4] = { UI_N("OFF"), UI_N("LOW"), UI_N("MED"), UI_N("HIGH") };
@@ -447,6 +455,7 @@ static const char *const sZoomLabels[4]  = { "90%", "100%", "110%", "120%" };
 
 const VitaExtra gVitaExtras[] = {
     // GRAPHICS
+    { VITA_TAB_GRAPHICS, UI_N("DISPLAY"), UI_N("UI MODE"),      "ui_mode",         2, 0, sUiModeVals, NULL, NULL, NULL },
     { VITA_TAB_GRAPHICS, UI_N("DISPLAY"), UI_N("UI THEME"),     "ui_theme",        6, 0, sThemeVals, NULL, NULL, NULL },
     { VITA_TAB_GRAPHICS, UI_N("3D WORLD"),UI_N("3D OVERWORLD"), "voxel",           2, 1, gVitaExtrasOffOn, NULL, NULL, NULL },
     { VITA_TAB_GRAPHICS, UI_N("3D WORLD"),UI_N("3D FRAMERATE"), "voxel_fps",       2, 0, sFpsVals, NULL, NULL, NULL },

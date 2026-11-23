@@ -59,7 +59,7 @@ static void LoadUserWindowGfxByFrameOnBg(u8 bgId, u8 frameType, u16 destOffset, 
 u8 TextWindow_PlayerFrameType(void)
 {
 #ifdef PLATFORM_VITA
-    return Ui_IsEnabled() ? Ui_GbaWindowFrame() : gSaveBlock2Ptr->optionsWindowFrameType;
+    return (Ui_IsEnabled() && !Ui_IsClassicGba()) ? Ui_GbaWindowFrame() : gSaveBlock2Ptr->optionsWindowFrameType;
 #else
     return gSaveBlock2Ptr->optionsWindowFrameType;
 #endif

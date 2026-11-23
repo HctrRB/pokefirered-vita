@@ -120,7 +120,7 @@ static void TapMenu(const int32_t tx, const int32_t ty, const int32_t x, const i
 
 bool Ui_MirrorCovers(void)
 {
-    return Ui_IsEnabled() && !Ui_IsOpen() && __atomic_load_n(&sCovers, __ATOMIC_ACQUIRE);
+    return Ui_IsEnabled() && !Ui_IsClassicGba() && !Ui_IsOpen() && __atomic_load_n(&sCovers, __ATOMIC_ACQUIRE);
 }
 
 void UiMirror_VisibleLines(const uint8_t *const start, const uint8_t *const end, char out[2][160])
@@ -231,6 +231,11 @@ static bool HeldBox(void)
 
 bool UiMirror_Draw(void)
 {
+    if (Ui_IsClassicGba())
+    {
+        __atomic_store_n(&sCovers, false, __ATOMIC_RELEASE);
+        return false;
+    }
     sFrame++;
     bool drew = false;
     const bool field = Ui_IsEnabled()

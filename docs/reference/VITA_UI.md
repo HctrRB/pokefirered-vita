@@ -81,9 +81,13 @@ Ported directly from `pokeemerald-vita-3ds/src/platform/ui/`:
     Core 1 decodes live GBA sprites into a staging ring; Core 0 writes dirty cells **in place** via
     `vglGetTexDataPointer` and only reuses cells idle for `UI_SPR_IDLE_TICKS` (4 ticks).
 
-### 2. Six Menu Themes (`ui_theme.c`) — Featuring `RED` and `GBA`
+### 2. Six Menu Themes (`ui_theme.c`) & UI Mode Selector (`ui_mode`)
 
-The theme engine in `pokeemerald-vita-3ds:ui_theme.c` already includes:
+The Options screen (`ui_scr_options.c`) under `GRAPHICS` includes the **UI MODE** setting (`ui_mode` in `settings.txt`):
+- **`NATIVE 16:9` (default):** Enables the full 960x544 Stage 2 UI suite (START Hub, Native Battle HUD, 16:9 Bag, Party, Dex, PC, Mart, etc.).
+- **`CLASSIC GBA`:** Restores authentic original GBA 240x160 interfaces across all gameplay systems (GBA START menu, GBA Bag, GBA Party, GBA Battle HUD, GBA Pokédex, GBA PC, GBA Mart, GBA popups). Selecting `OPTION` in the GBA START menu (or pressing Square in the overworld) opens the Native Options screen (`ui_scr_options.c`), allowing the player to configure world, graphics, controls, and cheats or toggle back to Native 16:9 at any time.
+
+The theme engine in `pokeemerald-vita-3ds:ui_theme.c` includes:
 
 | Theme | Visual Style | Typography | FireRed Role |
 |---|---|---|---|
@@ -119,7 +123,7 @@ Following the proven rules of `pokeemerald-vita-3ds:UI_PLAN.md` and `pokeemerald
 | **Kanto & Sevii Region / Fly Map** | `ui_scr_nav.c`, `ui_game_nav.c` (`gUiMapScreen`, `gUiFlyScreen`) | Standalone 4-region **Kanto & Sevii Region / Fly Map** (`L`/`R` switching across **Kanto**, **One–Three Islands**, **Four–Five Islands**, and **Six–Seven Islands**), hooked from `MOVE_FLY`, `ITEM_TOWN_MAP`, and wall Town Maps (`src/region_map.c`) |
 | **Trainer Card** | `ui_scr_card.c` (`gUiCardScreen`) | Front & back Kanto Trainer Card: 8 Kanto Badges (`Boulder`..`Earth`), Hall of Fame debut, Trades, Link Battles, Berry Crush, Union Room, and Four Island Bragging Stickers (`src/trainer_card.c`) |
 | **Poké Mart** | `ui_scr_mart.c` (`gUiMartScreen`) | Native Buy/Sell Poké Mart & Celadon Dept. Store floors (`src/shop.c`) |
-| **Bill's PC & Player's PC + Mail Reader** | `ui_scr_pc.c`, `ui_scr_playerpc.c` (`gUiPcScreen`, `gUiPlayerPcScreen`, `gUiMailReadScreen`) | Bill's / Celio's 14-box storage (`SELECT` QUICK, `UiParty_PushSummary`, box jump/wallpaper/rename, Kanto Indigo Plateau HM release safety) + **Player's PC** (`src/player_pc.c`: Withdraw, Deposit, Toss, Mailbox & Mail Reader `UiMailRead_Open`) |
+| **Bill's PC & Player's PC + Mail Reader** | `ui_scr_pc.c`, `ui_scr_playerpc.c` (`gUiPcScreen`, `gUiPlayerPcScreen`, `gUiMailReadScreen`) | Bill's / Celio's 14-box storage (`SELECT` QUICK, `UiParty_PushSummary`, box jump/wallpaper/rename, Kanto Indigo Plateau HM release safety) + **Player's PC** (`src/player_pc.c`: Withdraw, Deposit, Toss, Mailbox & Mail Reader `UiMailRead_Open`). Rigorous lifecycle management: `Task_PCMainMenu` removes `task->tWindowId` upon B/EXIT, `Task_PlayerPcItemStorage`/`Mailbox` transitions to `Task_PlayerPcWaitNativeUi` to prevent duplicate GBA submenu allocation on BG0 (`OtherBg0Windows` leak guard) |
 | **Options, Graphics, Enhancements, Cheats & Nuzlocke** | `ui_scr_options.c`, `ui_scr_nuz.c` (`gUiOptionsScreen`, `gUiNuzlockeScreen`) | 6-tab Options (`GAME`, `GRAPHICS`, `CONTROLS`, `ENHANCEMENTS`, `CHEATS`, `SAVE SLOT`) + Kanto 8-badge Nuzlocke tracker, preserving `ux0:data/FRVITA/settings.txt` keys |
 | **Naming & Easy Chat** | `ui_scr_naming.c`, `ui_scr_easychat.c` (`gUiNamingScreen`, `gUiEasyChatScreen`) | Native Naming Screen (`DoNamingScreen` in `src/naming_screen.c`, UPPER/lower/0-9 pages + Vita physical buttons) and Native Easy Chat (`DoEasyChatScreen` in `src/easy_chat.c`: Profile, Mail, Questionnaire) |
 | **Group A Full-Screen GBA Scenes** | [SCENES_16_9.md](SCENES_16_9.md) (`GameFrameOverlay.gbaFormat`, `GameFrameOverlay.gbaWindow`) | **Help System** (`L/R`), **Save Failed**, **Quest Log playback** (`QL_IS_PLAYBACK_STATE`), **Fame Checker**, **Teachy TV**, Oak's Lab starter table, Celadon Slot Machine, Berry Crush gameplay, Pokémon Jump, Dodrio Berry Picking, Sevii ferries, Evolution, Egg Hatch, Trade, Link rooms, Intro, Title, Credits, Hall of Fame, Diploma |

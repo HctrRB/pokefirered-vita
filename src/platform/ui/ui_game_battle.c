@@ -40,7 +40,7 @@ void UiGame_BattleMenuEnd(void)
 
 bool UiGame_OpenBattleMenu(const void *screen)
 {
-    if (!Ui_IsEnabled() || Ui_IsOpen())
+    if (!Ui_IsEnabled() || Ui_IsOpen() || Ui_IsClassicGba())
         return false;
     sBattleMenu = true;
     UiCore_OpenFromScript((const UiScreen *)screen, NULL);
@@ -49,7 +49,7 @@ bool UiGame_OpenBattleMenu(const void *screen)
 
 bool Ui_OpenBattleBag(void)
 {
-    if (!Ui_IsEnabled() || Ui_IsOpen())
+    if (!Ui_IsEnabled() || Ui_IsOpen() || Ui_IsClassicGba())
         return false;
     gSpecialVar_ItemId = ITEM_NONE;
     sBattleMenu = true;
@@ -59,7 +59,7 @@ bool Ui_OpenBattleBag(void)
 
 bool Ui_OpenBattleParty(void)
 {
-    if (!Ui_IsEnabled() || Ui_IsOpen())
+    if (!Ui_IsEnabled() || Ui_IsOpen() || Ui_IsClassicGba())
         return false;
     gSelectedMonPartyId = PARTY_SIZE;
     gPartyMenuUseExitCallback = FALSE;

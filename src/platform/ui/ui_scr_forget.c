@@ -91,7 +91,7 @@ static void Finish(void)
 
 bool Ui_OpenForgetMove(struct Pokemon *mons, uint8_t monIndex, uint16_t newMove, void (*callback)(void))
 {
-    if (!Ui_IsEnabled() || Ui_IsOpen() || mons == NULL || callback == NULL)
+    if (!Ui_IsEnabled() || Ui_IsOpen() || Ui_IsClassicGba() || mons == NULL || callback == NULL)
         return false;
     sMon = &mons[monIndex];
     sMonIndex = monIndex;
@@ -530,7 +530,7 @@ static const UiScreen sRelearnerScreen = { RlEnter, RlUpdate, RlBuild, NULL };
 
 bool Ui_OpenMoveRelearner(void)
 {
-    if (!Ui_IsEnabled() || Ui_IsOpen() || gSpecialVar_0x8004 >= PARTY_SIZE)
+    if (!Ui_IsEnabled() || Ui_IsOpen() || Ui_IsClassicGba() || gSpecialVar_0x8004 >= PARTY_SIZE)
         return false;
     sRlPartySlot = (uint8_t)gSpecialVar_0x8004;
     sRlBack = false;

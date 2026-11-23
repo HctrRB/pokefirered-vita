@@ -178,7 +178,7 @@ static void SetPage(int32_t page)
 bool Ui_OpenNaming(uint8_t templateNum, uint8_t *destBuffer, uint16_t species, uint16_t gender, uint32_t personality, void (*returnCallback)(void))
 {
     (void)personality;
-    if (!Ui_IsEnabled() || Ui_IsOpen() || destBuffer == NULL)
+    if (!Ui_IsEnabled() || Ui_IsOpen() || Ui_IsClassicGba() || destBuffer == NULL)
         return false;
     sTemplate = templateNum;
     sMax = (templateNum == NAMING_SCREEN_PLAYER || templateNum == NAMING_SCREEN_RIVAL) ? PLAYER_NAME_LENGTH

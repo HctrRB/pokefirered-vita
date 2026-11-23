@@ -114,15 +114,14 @@ void FieldGetPlayerInput(struct FieldInput *input, u16 newKeys, u16 heldKeys)
         {
             if ((newKeys & START_BUTTON) && !(gPlayerAvatar.flags & PLAYER_AVATAR_FLAG_FORCED))
                 input->pressedStartButton = TRUE;
-#if defined(PORT_BRIDGE) && !defined(PORT_GBA_START_MENU)
+#if defined(PLATFORM_VITA)
+            if (input->pressedStartButton && Ui_OwnsFieldStart())
+                input->pressedStartButton = FALSE;
+#elif defined(PORT_BRIDGE) && !defined(PORT_GBA_START_MENU)
             // The start menu lives on the 3DS bottom screen: START alone opens
             // nothing, unless that screen asked for an entry or can't serve here.
             // (A port without that screen yet builds with PORT_GBA_START_MENU.)
-            if (input->pressedStartButton && (
-#ifdef PLATFORM_VITA
-                Ui_OwnsFieldStart() ||
-#endif
-                !CtrStartMenu_AcceptStart()))
+            if (input->pressedStartButton && !CtrStartMenu_AcceptStart())
                 input->pressedStartButton = FALSE;
 #endif
             if (!QL_IS_PLAYBACK_STATE)

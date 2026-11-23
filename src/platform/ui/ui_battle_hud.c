@@ -81,6 +81,8 @@ static int8_t sBallsState[2][PARTY_SIZE];
 
 uint16_t Ui_BattleDispcntClear(void)
 {
+    if (Ui_IsClassicGba())
+        return 0;
     return __atomic_load_n(&sDispClear, __ATOMIC_RELAXED);
 }
 
@@ -117,8 +119,9 @@ void UiBattle_Tick(void)
     }
     sWasInBattle = inBattle;
 
-    // Tutorial demos (Old Man, Pokedude) and link battles preserve the native GBA battle UI.
+    // Tutorial demos (Old Man, Pokedude), link battles, and Classic GBA mode preserve the native GBA battle UI.
     sActive = Ui_IsEnabled() && inBattle
+           && !Ui_IsClassicGba()
            && !(gBattleTypeFlags & (BATTLE_TYPE_LINK | BATTLE_TYPE_OLD_MAN_TUTORIAL | BATTLE_TYPE_POKEDUDE));
     gUiHideBattleHudSprites = sActive ? TRUE : FALSE;
     const uint16_t clear = sActive ? (uint16_t)(DISPCNT_BG0_ON | (gUiLevelUpPage ? DISPCNT_BG1_ON : 0)) : 0U;

@@ -32,6 +32,8 @@ static void FormatSignTitle(const uint16_t mapSec, const int8_t floorNum)
 
 void Ui_ShowZoneSign(const uint16_t mapSec, const int8_t floorNum)
 {
+    if (Ui_IsClassicGba())
+        return;
     FormatSignTitle(mapSec, floorNum);
     sMotto = (floorNum == 0) ? Ui_TownMotto(mapSec) : NULL;
     if (sActive && sTimer > SIGN_SLIDE_FRAMES && sTimer < SIGN_SLIDE_FRAMES + SIGN_HOLD_FRAMES)
@@ -57,7 +59,7 @@ void UiSign_Reset(void)
 
 bool UiSign_Draw(void)
 {
-    if (!sActive || sTitle[0] == '\0')
+    if (!sActive || sTitle[0] == '\0' || Ui_IsClassicGba())
         return false;
 
     sTimer++;

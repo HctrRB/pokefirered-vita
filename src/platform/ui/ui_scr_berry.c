@@ -37,7 +37,7 @@ static void Finish(void)
 
 bool Ui_OpenBerryChoice(void (*const exitCallback)(void))
 {
-    if (!Ui_IsEnabled() || Ui_IsOpen())
+    if (!Ui_IsEnabled() || Ui_IsOpen() || Ui_IsClassicGba())
         return false;
     sCount = UiGame_PocketItems(UI_POCKET_BERRY_POUCH, sRows, 64);
     if (sCount == 0)

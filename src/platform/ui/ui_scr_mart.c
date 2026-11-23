@@ -54,7 +54,7 @@ static void AfterClose(void)
 bool Ui_OpenMart(const uint8_t shopTaskId, const bool sell, const uint8_t martType,
                  const uint16_t *const items, const uint16_t count)
 {
-    if (!Ui_IsEnabled() || Ui_IsOpen() || martType > 1 || items == NULL)
+    if (!Ui_IsEnabled() || Ui_IsOpen() || Ui_IsClassicGba() || martType > 1 || items == NULL)
         return false;
     sTaskId = shopTaskId;
     sItems = items;

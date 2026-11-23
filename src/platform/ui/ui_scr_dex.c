@@ -1047,7 +1047,7 @@ const UiScreen gUiDexDetailScreen = { DetEnter, DetUpdate, DetBuild, NULL };
 
 bool Ui_OpenCaughtDexPage(const uint16_t nationalNum)
 {
-    if (!Ui_IsEnabled() || Ui_IsOpen() || nationalNum == 0 || nationalNum > NATIONAL_DEX_COUNT)
+    if (!Ui_IsEnabled() || Ui_IsOpen() || Ui_IsClassicGba() || nationalNum == 0 || nationalNum > NATIONAL_DEX_COUNT)
         return false;
     sDetailNat = nationalNum;
     sCaughtPage = true;

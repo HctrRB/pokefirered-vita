@@ -15,6 +15,9 @@ void Ui_Shutdown(void);
 bool Ui_IsEnabled(void);
 void Ui_SetEnabled(bool enabled);
 
+// Core 1 / Any: true when user selected Classic GBA UI mode in settings.
+bool Ui_IsClassicGba(void);
+
 // GBA text window frame (0-9 for FireRed type1..type10) matching current theme.
 uint8_t Ui_GbaWindowFrame(void);
 

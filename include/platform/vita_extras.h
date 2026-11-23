@@ -73,6 +73,7 @@ typedef enum
     FAST_EXTRA_VOXEL_SKY_BLOOM, // 0 = OFF, 5 = 1.0x, 10 = 2.0x directional sky bloom
     FAST_EXTRA_VOXEL_SHAFTS,    // 0 = OFF, 5 = 1.0x, 10 = 2.0x procedural light shafts
     FAST_EXTRA_UI_THEME,        // UI_THEME_* (default 0 = GBA)
+    FAST_EXTRA_UI_MODE,         // 0 = NATIVE 16:9, 1 = CLASSIC GBA
     FAST_EXTRA_VISIBLE_WILD,    // 0 = OFF, 1..3 visible wild Pokemon density
     FAST_EXTRA_ENCOUNTER_RATE,  // 0 = NORMAL, 1 = OFF, 2 = 1/4, 3 = 1/2, 4 = 2X
     FAST_EXTRA_VOXEL_HD2D,      // VOXEL_HD2D_*: 0 = OFF, 1 = LOW, 2 = MED, 3 = HIGH
@@ -91,6 +92,7 @@ enum
 };
 
 int32_t VitaExtras_GetFast(FastExtraId id);
+bool VitaExtras_IsClassicGbaUi(void);
 int32_t VitaExtras_Get(const char *key);
 void VitaExtras_Set(const char *key, int32_t value);
 void VitaExtras_Step(const VitaExtra *extra, int direction);

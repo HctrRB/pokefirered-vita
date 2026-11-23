@@ -92,6 +92,11 @@ bool Ui_IsEnabled(void)
     return sEnabled && UiAssets_Ready();
 }
 
+bool Ui_IsClassicGba(void)
+{
+    return VitaExtras_IsClassicGbaUi();
+}
+
 void Ui_SetEnabled(const bool enabled)
 {
     sEnabled = enabled;
@@ -196,6 +201,8 @@ static void ReadInput(void)
 
 bool Ui_OwnsFieldStart(void)
 {
+    if (Ui_IsClassicGba())
+        return false;
     return Ui_IsEnabled()
         && !MenuHelpers_IsLinkActive()
         && !InUnionRoom()

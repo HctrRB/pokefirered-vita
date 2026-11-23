@@ -530,6 +530,9 @@
   "CITY": [
    "src/platform/ui/ui_scr_pc.c"
   ],
+  "CLASSIC GBA": [
+   "src/platform/vita/vita_extras.c"
+  ],
   "CLOCK SPEED": [
    "src/platform/vita/vita_extras.c"
   ],
@@ -1627,6 +1630,12 @@
   "NATIONAL LIST": [
    "src/platform/ui/ui_scr_dex.c"
   ],
+  "NATIVE 16:9": [
+   "src/platform/vita/vita_extras.c"
+  ],
+  "NATIVE 16:9 widescreen or authentic original GBA menus.": [
+   "src/platform/ui/ui_scr_options.c"
+  ],
   "NATURE": [
    "src/platform/ui/ui_scr_party.c",
    "src/platform/ui/ui_scr_pc.c"
@@ -2717,6 +2726,9 @@
   ],
   "Type": [
    "src/platform/ui/ui_scr_naming.c"
+  ],
+  "UI MODE": [
+   "src/platform/vita/vita_extras.c"
   ],
   "UI THEME": [
    "src/platform/vita/vita_extras.c"

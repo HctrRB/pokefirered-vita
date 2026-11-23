@@ -215,7 +215,7 @@ static void GroupLabel(int32_t index, char *out, size_t cap)
 
 bool Ui_OpenEasyChat(uint8_t type, uint16_t *words, void (*exitCallback)(void))
 {
-    if (!Ui_IsEnabled() || Ui_IsOpen() || words == NULL || !EasyChat_UiInit(type, words))
+    if (!Ui_IsEnabled() || Ui_IsOpen() || Ui_IsClassicGba() || words == NULL || !EasyChat_UiInit(type, words))
         return false;
     sExit = exitCallback;
     UiCore_OpenHosted(&gUiEasyChatScreen, NULL);

@@ -502,7 +502,7 @@ static void StartBoxNaming(void)
 
 bool Ui_OpenPc(uint8_t option)
 {
-    if (!Ui_IsEnabled() || Ui_IsOpen() || option > MODE_ITEMS)
+    if (!Ui_IsEnabled() || Ui_IsOpen() || Ui_IsClassicGba() || option > MODE_ITEMS)
         return false;
     sMode = option;
     UiCore_OpenFromScript(&gUiPcScreen, AfterClose);

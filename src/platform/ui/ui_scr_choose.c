@@ -321,7 +321,7 @@ static const ChooseKind sKinds[UI_CHOOSE_COUNT] = {
 
 bool Ui_OpenChooseMon(int kind)
 {
-    if (!Ui_IsEnabled() || Ui_IsOpen() || kind < 0 || kind >= UI_CHOOSE_COUNT)
+    if (!Ui_IsEnabled() || Ui_IsOpen() || Ui_IsClassicGba() || kind < 0 || kind >= UI_CHOOSE_COUNT)
         return false;
     sKind = kind;
     sKinds[kind].defaults();

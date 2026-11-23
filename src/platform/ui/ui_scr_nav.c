@@ -778,7 +778,7 @@ const UiScreen gUiMapScreen = { MapScreenEnter, MapScreenUpdate, MapScreenBuild,
 
 bool Ui_OpenTownMap(const bool wallMap, void (*const exitCallback)(void))
 {
-    if (!Ui_IsEnabled() || Ui_IsOpen())
+    if (!Ui_IsEnabled() || Ui_IsOpen() || Ui_IsClassicGba())
         return false;
     sWallModeNext = wallMap;
     UiCore_OpenHosted(&gUiMapScreen, exitCallback != NULL ? exitCallback : CB2_ReturnToField);

@@ -33,7 +33,7 @@ void ShowMapNamePopup(bool32 palIntoFadedBuffer)
     if (FlagGet(FLAG_DONT_SHOW_MAP_NAME_POPUP) != TRUE && !QL_IS_PLAYBACK_STATE)
     {
 #ifdef PLATFORM_VITA
-        if (Ui_IsEnabled())
+        if (Ui_IsEnabled() && !Ui_IsClassicGba())
         {
             Ui_ShowZoneSign(gMapHeader.regionMapSectionId, gMapHeader.floorNum);
             return;
@@ -141,7 +141,8 @@ void DismissMapNamePopup(void)
     u8 taskId;
     s16 *data;
 #ifdef PLATFORM_VITA
-    Ui_HideZoneSign();
+    if (!Ui_IsClassicGba())
+        Ui_HideZoneSign();
 #endif
     taskId = FindTaskIdByFunc(Task_MapNamePopup);
     if (taskId != TASK_NONE)

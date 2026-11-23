@@ -78,6 +78,7 @@ static const char *const sCoreHelp[6] = {
 };
 
 static const struct { const char *key, *help; } sExtraHelp[] = {
+    { "ui_mode",        UI_N("NATIVE 16:9 widescreen or authentic original GBA menus.") },
     { "ui_theme",       UI_N("Colour and style of the menus.") },
     { "voxel",          UI_N("Draw the overworld as a 3D voxel diorama.") },
     { "voxel_fps",      UI_N("Frame rate of the 3D world. 60 uses more battery.") },

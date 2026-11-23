@@ -108,7 +108,7 @@ static void Refresh(void)
 
 bool Ui_OpenPlayerPc(uint8_t taskId, uint8_t tab, uint8_t kind)
 {
-    if (!Ui_IsEnabled() || Ui_IsOpen() || tab >= TAB_COUNT)
+    if (!Ui_IsEnabled() || Ui_IsOpen() || tab >= TAB_COUNT || Ui_IsClassicGba())
         return false;
     sTabCount = 2;
     sTabIds[0] = TAB_ITEMS;
