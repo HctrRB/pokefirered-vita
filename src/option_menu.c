@@ -205,14 +205,6 @@ static void VBlankCB_OptionMenu(void)
 }
 
 #ifdef PLATFORM_VITA
-static void CB2_UiOptionsHost(void)
-{
-    RunTasks();
-    AnimateSprites();
-    BuildOamBuffer();
-    UpdatePaletteFade();
-}
-
 static void ReturnFromUiOptions(void)
 {
     SetMainCallback2(gMain.savedCallback != NULL ? gMain.savedCallback : CB2_ReturnToFieldWithOpenMenu);
@@ -227,16 +219,7 @@ void CB2_OptionsMenuFromStartMenu(void)
         gMain.savedCallback = CB2_ReturnToFieldWithOpenMenu;
 #ifdef PLATFORM_VITA
     if (Ui_OpenOptionsHosted(ReturnFromUiOptions))
-    {
-        SetHBlankCallback(NULL);
-        ResetPaletteFade();
-        ScanlineEffect_Stop();
-        ResetTasks();
-        ResetSpriteData();
-        SetVBlankCallback(VBlankCB_OptionMenu);
-        SetMainCallback2(CB2_UiOptionsHost);
         return;
-    }
 #endif
     sOptionMenuPtr = AllocZeroed(sizeof(struct OptionMenu));
     sOptionMenuPtr->loadState = 0;

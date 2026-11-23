@@ -47,6 +47,7 @@ bool Ui_ConsumesInput(void);
 void Ui_Render(int32_t viewWidth, int32_t viewHeight);
 
 // Hosted entrypoints (F7a/F7b/F7c).
+bool Ui_OpenOptions(void);
 bool Ui_OpenOptionsHosted(void (*after)(void));
 
 // Core 1 (map_name_popup.c): Kanto/Sevii zone sign banner with optional floor number.

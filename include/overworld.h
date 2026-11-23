@@ -175,6 +175,7 @@ u16 SetLinkWaitingForScript(void);
 void SetMainCallback1(MainCallback cb);
 void CB1_Overworld(void);
 void CB2_ReturnToFieldContinueScript(void);
+bool8 Overworld_IsReturningToField(void);
 u8 GetLastUsedWarpMapSectionId(void);
 void StoreInitialPlayerAvatarState(void);
 void UpdateEscapeWarp(s16 x, s16 y);

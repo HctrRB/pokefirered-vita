@@ -1116,6 +1116,14 @@ static bool ScreenFadeLive(float *amount, float rgb[3])
 
     *amount = 0.0f;
     rgb[0] = rgb[1] = rgb[2] = 0.0f;
+
+    extern bool8 Overworld_IsReturningToField(void);
+    if (Overworld_IsReturningToField() && !gPaletteFade.active)
+    {
+        *amount = 1.0f;
+        return true;
+    }
+
     fading = gPaletteFade.active || gPaletteFade.y != 0
           || (gWeatherPtr != NULL && gWeatherPtr->palProcessingState == WEATHER_PAL_STATE_SCREEN_FADING_IN)
           || (gWeatherPtr != NULL && gWeatherPtr->palProcessingState == WEATHER_PAL_STATE_SCREEN_FADING_OUT);

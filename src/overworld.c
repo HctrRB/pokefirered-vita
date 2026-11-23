@@ -1719,7 +1719,16 @@ static void CB2_ReturnToFieldLocal(void)
 
 bool8 Overworld_IsReturningToField(void)
 {
-    return (gMain.callback2 == CB2_ReturnToFieldLocal || gMain.callback2 == CB2_ReturnToField);
+    return gMain.callback2 == CB2_ReturnToFieldLocal
+        || gMain.callback2 == CB2_ReturnToField
+        || gMain.callback2 == CB2_ReturnToFieldWithOpenMenu
+        || gMain.callback2 == CB2_ReturnToFieldContinueScript
+        || gMain.callback2 == CB2_ReturnToFieldContinueScriptPlayMapMusic
+        || gMain.callback2 == CB2_ReturnToFieldFromDiploma
+        || gMain.callback2 == CB2_ReturnToFieldFromMultiplayer
+        || gMain.callback2 == CB2_ReturnToFieldCableClub
+        || gMain.callback2 == CB2_ReturnToFieldLink
+        || gMain.callback2 == CB2_LoadMapOnReturnToFieldCableClub;
 }
 
 static void CB2_ReturnToFieldLink(void)

@@ -616,6 +616,14 @@ static void Build(void)
 
 const UiScreen gUiOptionsScreen = { Enter, Update, Build, NULL };
 
+bool Ui_OpenOptions(void)
+{
+    if (!Ui_IsEnabled() || Ui_IsOpen())
+        return false;
+    UiCore_OpenScreen(&gUiOptionsScreen);
+    return true;
+}
+
 bool Ui_OpenOptionsHosted(void (*const after)(void))
 {
     if (!Ui_IsEnabled() || Ui_IsOpen())

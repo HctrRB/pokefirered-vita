@@ -37,6 +37,9 @@
 #include "constants/songs.h"
 #include "constants/field_weather.h"
 #include "sloopsvc.h"
+#ifdef PLATFORM_VITA
+#include "platform/ui.h"
+#endif
 
 enum StartMenuOption
 {
@@ -467,7 +470,11 @@ static void StartMenu_FadeScreenIfLeavingOverworld(void)
 {
     if (sStartMenuCallback != StartMenuSaveCallback
      && sStartMenuCallback != StartMenuExitCallback
-     && sStartMenuCallback != StartMenuSafariZoneRetireCallback)
+     && sStartMenuCallback != StartMenuSafariZoneRetireCallback
+#ifdef PLATFORM_VITA
+     && sStartMenuCallback != StartMenuOptionCallback
+#endif
+    )
     {
         StopPokemonLeagueLightingEffectTask();
         FadeScreen(FADE_TO_BLACK, 0);
@@ -542,6 +549,13 @@ static bool8 StartMenuSaveCallback(void)
 
 static bool8 StartMenuOptionCallback(void)
 {
+#ifdef PLATFORM_VITA
+    DestroySafariZoneStatsWindow();
+    DestroyHelpMessageWindow_();
+    CloseStartMenu();
+    Ui_OpenOptions();
+    return TRUE;
+#else
     if (!gPaletteFade.active)
     {
         PlayRainStoppingSoundEffect();
@@ -552,6 +566,7 @@ static bool8 StartMenuOptionCallback(void)
         return TRUE;
     }
     return FALSE;
+#endif
 }
 
 static bool8 StartMenuExitCallback(void)
