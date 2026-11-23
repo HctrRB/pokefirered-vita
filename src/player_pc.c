@@ -246,12 +246,20 @@ bool8 PlayerPc_GetTopMenuForUi(const u8 **outLabels, u8 maxOut, u8 *outCount, u8
 }
 #endif
 
+#ifdef PLATFORM_VITA
+static void Task_PlayerPcWaitNativeUi(u8 taskId)
+{
+    (void)taskId;
+}
+#endif
+
 static void Task_PlayerPcItemStorage(u8 taskId)
 {
 #ifdef PLATFORM_VITA
     if (Ui_OpenPlayerPc(taskId, UI_PC_TAB_ITEMS, gPlayerPcMenuManager.notInRoom ? UI_PC_CENTER : UI_PC_BEDROOM))
     {
         ClearDialogWindowAndFrame(0, TRUE);
+        gTasks[taskId].func = Task_PlayerPcWaitNativeUi;
         return;
     }
 #endif
@@ -265,6 +273,7 @@ static void Task_PlayerPcMailbox(u8 taskId)
     if (Ui_OpenPlayerPc(taskId, UI_PC_TAB_MAIL, gPlayerPcMenuManager.notInRoom ? UI_PC_CENTER : UI_PC_BEDROOM))
     {
         ClearDialogWindowAndFrame(0, TRUE);
+        gTasks[taskId].func = Task_PlayerPcWaitNativeUi;
         return;
     }
 #endif
@@ -777,7 +786,15 @@ static void Task_PlayerPcExitMailSubmenu(u8 taskId)
 
 void PlayerPC_ReturnFromUi(u8 taskId)
 {
-    DisplayItemMessageOnField(taskId, FONT_NORMAL, gText_WhatWouldYouLikeToDo, Task_DrawPlayerPcTopMenu);
+    if (taskId != TASK_NONE && gTasks[taskId].isActive)
+    {
+        DisplayItemMessageOnField(taskId, FONT_NORMAL, gText_WhatWouldYouLikeToDo, Task_DrawPlayerPcTopMenu);
+    }
+    else
+    {
+        u8 newTaskId = CreateTask(TaskDummy, 0);
+        DisplayItemMessageOnField(newTaskId, FONT_NORMAL, gText_WhatWouldYouLikeToDo, Task_DrawPlayerPcTopMenu);
+    }
 }
 
 #undef tListMenuTaskId

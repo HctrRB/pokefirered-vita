@@ -285,6 +285,7 @@ static void Task_PCMainMenu(u8 taskId)
         case OPTION_EXIT:
             ClearStdWindowAndFrame(0, TRUE);
             ClearStdWindowAndFrame(task->tWindowId, TRUE);
+            RemoveWindow(task->tWindowId);
             UnlockPlayerFieldControls();
             ScriptContext_Enable();
             DestroyTask(taskId);
@@ -430,7 +431,7 @@ bool8 PokeStorage_GetMainMenuForUi(const u8 **outLabels, u8 maxOut, u8 *outCount
     if (taskId == TASK_NONE)
         return FALSE;
     struct Task *task = &gTasks[taskId];
-    if (task->tState != 2 && task->tState != 3) // STATE_HANDLE_INPUT / STATE_ERROR_MSG
+    if (task->tState < 1 || task->tState > 3) // STATE_FADE_IN / STATE_HANDLE_INPUT / STATE_ERROR_MSG
         return FALSE;
     u8 count = OPTIONS_COUNT;
     if (count > maxOut)

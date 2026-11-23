@@ -1144,7 +1144,14 @@ static void TeachyTvGrassAnimationObjCallback(struct Sprite *sprite)
     s16 *data = gTasks[sprite->data[0]].data;
     struct Sprite *objAddr = &gSprites[data[1]];
 
+#ifdef UBFIX
+    // TeachyTvPrepBattle and TeachyTvQuitFadeControlAndTaskDel free sResources while grass
+    // sprites still animate (battle transition, exit fade). On GBA the NULL read hit the BIOS
+    // and returned junk; here it faults, so a freed buffer counts as "not disabled", as on GBA.
+    if (sResources != NULL && sResources->grassAnimDisabled == 1)
+#else
     if (sResources->grassAnimDisabled == 1)
+#endif
         DestroySprite(sprite);
     else
     {

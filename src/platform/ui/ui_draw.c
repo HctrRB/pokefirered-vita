@@ -242,6 +242,7 @@ void UiDraw_Publish(const float tickMs)
     UiDrawList *const dst = &sBuffers[sWriteIdx];
     dst->seq = ++sSeq;
     dst->tickMs = tickMs;
+    UiStall_Published(sSeq);
     __atomic_store_n(&sPubIdx, sWriteIdx, __ATOMIC_RELEASE);
     sWriteIdx = (sWriteIdx + 1U) % UI_DRAW_BUFFERS;
     if (sWriteIdx == __atomic_load_n(&sPubIdx, __ATOMIC_ACQUIRE))

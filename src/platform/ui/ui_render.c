@@ -91,6 +91,7 @@ void Ui_Render(const int32_t viewWidth, const int32_t viewHeight)
     const UiDrawList *const list = UiAssets_Ready() ? UiDraw_Acquire() : NULL;
     if (list == NULL || (list->vcount == 0 && list->backdropKind < 0))
         return;
+    UiStall_Render(list->seq);
 
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glUseProgram(0);
