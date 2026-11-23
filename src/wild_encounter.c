@@ -63,6 +63,8 @@ static const struct WildPokemonInfo *GetLandMonsInfo(u16 headerId);
 #ifdef PLATFORM_VITA
 static const struct WildPokemonInfo *GetLandMonsInfo(u16 headerId)
 {
+    if (headerId == HEADER_NONE)
+        return NULL;
     const struct WildPokemonHeader *const header = &gWildMonHeaders[headerId];
     return VitaEncounters_Land(header->landMonsInfo, header->mapGroup, header->mapNum);
 }
@@ -941,8 +943,6 @@ struct VisibleWild
     u16 species, idle, sparkle;
     s16 x, y;
     u32 personality;
-    u8 retryTimer;
-    u8 failCount;
 };
 
 struct VisibleCoord
@@ -1100,8 +1100,6 @@ static void VisibleDropSprite(struct VisibleWild *v)
     v->matrix = 0xFF;
     v->scaleFrames = 0;
     v->vanishing = FALSE;
-    v->retryTimer = 0;
-    v->failCount = 0;
 }
 
 static void VisibleForgetSprite(struct VisibleWild *v)
@@ -1112,8 +1110,6 @@ static void VisibleForgetSprite(struct VisibleWild *v)
     v->spriteId = VW_NONE;
     v->matrix = 0xFF;
     v->scaleFrames = 0;
-    v->retryTimer = 0;
-    v->failCount = 0;
 }
 
 static void VisibleRemove(struct VisibleWild *v)
@@ -1473,8 +1469,6 @@ static bool8 VisibleInitMon(struct VisibleWild *v, u16 headerId, s16 x, s16 y, b
     v->scaleFrames = 0;
     v->idle = idleDelay + Random() % 90;
     v->sparkle = 0;
-    v->retryTimer = 0;
-    v->failCount = 0;
     v->active = TRUE;
     return TRUE;
 }
@@ -1965,7 +1959,9 @@ static void VisiblePopulateMap(u16 mainHeaderId, s16 px, s16 py, bool8 shifted)
         }
     }
 
-    sVisibleTargetCount = (u16)VisibleActiveCount();
+    u32 active = VisibleActiveCount();
+    u32 most = VisibleMost();
+    sVisibleTargetCount = (u16)(active > most ? active : most);
 }
 
 static bool8 VisibleTrySpawn(u16 headerId)
@@ -2232,8 +2228,6 @@ static void VisibleStreamSprites(s16 px, s16 py, u32 most, bool8 settled)
 
             if (!v->active || v->spriteId != VW_NONE || v->vanishing)
                 continue;
-            if (v->retryTimer > 0)
-                continue;
             if (!VisibleInShowRange(v->x, v->y, px, py))
                 continue;
             if (!IsWildLevelAllowedByRepel(v->level))
@@ -2255,16 +2249,8 @@ static void VisibleStreamSprites(s16 px, s16 py, u32 most, bool8 settled)
 
             if (!VisibleMakeSprite(best, grow))
             {
-                best->failCount++;
-                if (best->failCount >= 3)
-                {
-                    VisibleRemove(best);
-                }
-                else
-                {
-                    best->retryTimer = 60;
-                }
-                continue;
+                sVisibleRetry = 15;
+                break;
             }
             if (grow > 0)
                 VisibleRustle(best);
@@ -2295,8 +2281,6 @@ static void VisibleUpdateActive(s16 px, s16 py, s16 ppx, s16 ppy, bool8 inWater,
             VisibleRemove(v);
             continue;
         }
-        if (v->retryTimer > 0)
-            v->retryTimer--;
 
         if (v->spriteId == VW_NONE)
             continue;
@@ -2336,9 +2320,15 @@ static void VisibleUpdateActive(s16 px, s16 py, s16 ppx, s16 ppy, bool8 inWater,
 
 static void VisibleRespawnTick(u16 headerId, bool8 canSpawn, bool8 settled, u32 percent)
 {
+    u32 most;
+
     if (!canSpawn || !settled || headerId == HEADER_NONE || percent == 0 || sWildEncountersDisabled)
         return;
-    if (VisibleActiveCount() >= sVisibleTargetCount)
+    most = VisibleMost();
+    if (!most)
+        return;
+    u32 target = sVisibleTargetCount > most ? sVisibleTargetCount : most;
+    if (VisibleActiveCount() >= target)
         return;
     if (sVisibleSpawnTimer)
     {
