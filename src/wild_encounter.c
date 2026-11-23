@@ -941,6 +941,8 @@ struct VisibleWild
     u16 species, idle, sparkle;
     s16 x, y;
     u32 personality;
+    u8 retryTimer;
+    u8 failCount;
 };
 
 struct VisibleCoord
@@ -1098,6 +1100,8 @@ static void VisibleDropSprite(struct VisibleWild *v)
     v->matrix = 0xFF;
     v->scaleFrames = 0;
     v->vanishing = FALSE;
+    v->retryTimer = 0;
+    v->failCount = 0;
 }
 
 static void VisibleForgetSprite(struct VisibleWild *v)
@@ -1108,6 +1112,8 @@ static void VisibleForgetSprite(struct VisibleWild *v)
     v->spriteId = VW_NONE;
     v->matrix = 0xFF;
     v->scaleFrames = 0;
+    v->retryTimer = 0;
+    v->failCount = 0;
 }
 
 static void VisibleRemove(struct VisibleWild *v)
@@ -1378,6 +1384,21 @@ static bool8 VisibleMakeSprite(struct VisibleWild *v, u8 grow)
         v->spriteId = CreateMonIcon(v->species, SpriteCB_VisibleIcon, 0, 0, 1, v->personality, TRUE);
         if (v->spriteId >= MAX_SPRITES)
         {
+            u32 j;
+            bool8 shared = FALSE;
+
+            for (j = 0; j < VW_POOL_MAX; j++)
+            {
+                if (&sVisible[j] != v && sVisible[j].active && !sVisible[j].hgss && VisibleSpriteValid(&sVisible[j])
+                 && gMonIconPaletteIndices[sVisible[j].species] == gMonIconPaletteIndices[v->species])
+                {
+                    shared = TRUE;
+                    break;
+                }
+            }
+            if (!shared)
+                FreeMonIconPalette(v->species);
+
             v->spriteId = VW_NONE;
             return FALSE;
         }
@@ -1452,6 +1473,8 @@ static bool8 VisibleInitMon(struct VisibleWild *v, u16 headerId, s16 x, s16 y, b
     v->scaleFrames = 0;
     v->idle = idleDelay + Random() % 90;
     v->sparkle = 0;
+    v->retryTimer = 0;
+    v->failCount = 0;
     v->active = TRUE;
     return TRUE;
 }
@@ -2209,6 +2232,8 @@ static void VisibleStreamSprites(s16 px, s16 py, u32 most, bool8 settled)
 
             if (!v->active || v->spriteId != VW_NONE || v->vanishing)
                 continue;
+            if (v->retryTimer > 0)
+                continue;
             if (!VisibleInShowRange(v->x, v->y, px, py))
                 continue;
             if (!IsWildLevelAllowedByRepel(v->level))
@@ -2230,8 +2255,16 @@ static void VisibleStreamSprites(s16 px, s16 py, u32 most, bool8 settled)
 
             if (!VisibleMakeSprite(best, grow))
             {
-                sVisibleRetry = 30;
-                break;
+                best->failCount++;
+                if (best->failCount >= 3)
+                {
+                    VisibleRemove(best);
+                }
+                else
+                {
+                    best->retryTimer = 60;
+                }
+                continue;
             }
             if (grow > 0)
                 VisibleRustle(best);
@@ -2262,6 +2295,9 @@ static void VisibleUpdateActive(s16 px, s16 py, s16 ppx, s16 ppy, bool8 inWater,
             VisibleRemove(v);
             continue;
         }
+        if (v->retryTimer > 0)
+            v->retryTimer--;
+
         if (v->spriteId == VW_NONE)
             continue;
         if (v->scaleFrames)

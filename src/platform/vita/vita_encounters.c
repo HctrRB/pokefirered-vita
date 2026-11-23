@@ -205,29 +205,52 @@ uint16_t VitaEncounters_Resolve(const VitaTimedEncounterRule *const rules, const
     return original;
 }
 
+#define VITA_TIMED_BANKS 4
+static struct WildPokemon sTimedSlots[VITA_TIMED_BANKS][12];
+static struct WildPokemonInfo sTimedInfo[VITA_TIMED_BANKS];
+static uint32_t sTimedBankIndex = 0;
+
 const struct WildPokemonInfo *VitaEncounters_LandPhase(const struct WildPokemonInfo *const original,
                                                        const uint32_t mapGroup, const uint32_t mapNum, const uint32_t phase)
 {
-    static struct WildPokemon slots[12];
-    static struct WildPokemonInfo timed;
+    bool changed = false;
+
     if (original == NULL || original->wildPokemon == NULL || VitaExtras_GetFast(FAST_EXTRA_TIMED_ENCOUNTERS) != 1)
         return original;
-    for (size_t index = 0; index < ARRAY_COUNT(slots); ++index)
+
+    for (size_t index = 0; index < 12; ++index)
     {
-        slots[index] = original->wildPokemon[index];
-        slots[index].species = VitaEncounters_Resolve(sRules, ARRAY_COUNT(sRules), mapGroup, mapNum,
-                                                      (uint32_t)index, slots[index].species, phase);
+        uint16_t resolved = VitaEncounters_Resolve(sRules, ARRAY_COUNT(sRules),
+                                                   mapGroup, mapNum,
+                                                   (uint32_t)index, original->wildPokemon[index].species, phase);
+        if (resolved != original->wildPokemon[index].species)
+        {
+            changed = true;
+            break;
+        }
     }
-    timed = *original;
-    timed.wildPokemon = slots;
-    return &timed;
+
+    if (!changed)
+        return original;
+
+    const uint32_t bank = sTimedBankIndex;
+    sTimedBankIndex = (sTimedBankIndex + 1) % VITA_TIMED_BANKS;
+
+    for (size_t index = 0; index < 12; ++index)
+    {
+        sTimedSlots[bank][index] = original->wildPokemon[index];
+        sTimedSlots[bank][index].species = VitaEncounters_Resolve(sRules, ARRAY_COUNT(sRules),
+                                                                 mapGroup, mapNum,
+                                                                 (uint32_t)index, original->wildPokemon[index].species, phase);
+    }
+    sTimedInfo[bank] = *original;
+    sTimedInfo[bank].wildPokemon = sTimedSlots[bank];
+    return &sTimedInfo[bank];
 }
 
 const struct WildPokemonInfo *VitaEncounters_Land(const struct WildPokemonInfo *const original,
                                                   const uint32_t mapGroup, const uint32_t mapNum)
 {
-    static struct WildPokemon slots[12];
-    static struct WildPokemonInfo timed;
     uint32_t seconds = 0;
     uint32_t rate = 0;
     bool changed = false;
@@ -241,19 +264,33 @@ const struct WildPokemonInfo *VitaEncounters_Land(const struct WildPokemonInfo *
 
     const uint32_t phase = VitaEncounters_Phase(seconds);
 
-    for (size_t index = 0; index < ARRAY_COUNT(slots); ++index)
+    for (size_t index = 0; index < 12; ++index)
     {
-        slots[index] = original->wildPokemon[index];
-        slots[index].species = VitaEncounters_Resolve(sRules, ARRAY_COUNT(sRules),
-                                                      mapGroup, mapNum,
-                                                      (uint32_t)index, slots[index].species, phase);
-        changed |= (slots[index].species != original->wildPokemon[index].species);
+        uint16_t resolved = VitaEncounters_Resolve(sRules, ARRAY_COUNT(sRules),
+                                                   mapGroup, mapNum,
+                                                   (uint32_t)index, original->wildPokemon[index].species, phase);
+        if (resolved != original->wildPokemon[index].species)
+        {
+            changed = true;
+            break;
+        }
     }
 
     if (!changed)
         return original;
 
-    timed = *original;
-    timed.wildPokemon = slots;
-    return &timed;
+    const uint32_t bank = sTimedBankIndex;
+    sTimedBankIndex = (sTimedBankIndex + 1) % VITA_TIMED_BANKS;
+
+    for (size_t index = 0; index < 12; ++index)
+    {
+        sTimedSlots[bank][index] = original->wildPokemon[index];
+        sTimedSlots[bank][index].species = VitaEncounters_Resolve(sRules, ARRAY_COUNT(sRules),
+                                                                 mapGroup, mapNum,
+                                                                 (uint32_t)index, original->wildPokemon[index].species, phase);
+    }
+
+    sTimedInfo[bank] = *original;
+    sTimedInfo[bank].wildPokemon = sTimedSlots[bank];
+    return &sTimedInfo[bank];
 }
